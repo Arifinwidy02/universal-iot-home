@@ -12,4 +12,6 @@ const devicesSlice = createSlice({
   reducers: {},
 });
 
+export type DevicesState = ReturnType<typeof devicesSlice.reducer>;
+
 export default devicesSlice.reducer;
