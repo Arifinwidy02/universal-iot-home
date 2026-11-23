@@ -1,27 +1,135 @@
-export const colors = {
-  paper: '#F7F6F3',
-  surface: '#FFFFFF',
-  ink: '#14161A',
-  muted: '#5C5851',
-  hairline: '#DEDAD2',
-  accent: '#B4542A',
+import { Platform, type TextStyle } from 'react-native';
+
+/**
+ * RELAY // OS design tokens.
+ * Source of truth: docs/relay_os_design_system.md. Components read these
+ * tokens only — never a hardcoded hex value, and never a token that is not in
+ * that document.
+ */
+
+export type ThemeName = 'day' | 'night';
+
+const day = {
+  canvas: '#EFECE6',
+  surface: '#F7F5F0',
+  recessed: '#E2DDD5',
+  ink: '#1A1A18',
+  inkMuted: '#6E6A63',
+  border: '#D2CCC1',
+  borderStrong: '#B5AEA1',
+  accent: '#FF4D00',
+  accentSoft: 'rgba(255, 77, 0, 0.14)',
+  online: '#16A34A',
+  onlineSoft: 'rgba(22, 163, 74, 0.12)',
+  danger: '#D92D20',
+  dangerBg: '#FDF2F1',
+  rockerTop: '#FFFFFF',
+  rockerBot: '#DDD7CD',
 } as const;
 
+const night = {
+  canvas: '#141413',
+  surface: '#1E1E1C',
+  recessed: '#0D0D0C',
+  ink: '#F2EFE9',
+  inkMuted: '#8E8A82',
+  border: '#2E2D2A',
+  borderStrong: '#46443F',
+  accent: '#FF4D00',
+  accentSoft: 'rgba(255, 77, 0, 0.20)',
+  online: '#16A34A',
+  onlineSoft: 'rgba(22, 163, 74, 0.16)',
+  danger: '#EF4444',
+  dangerBg: 'rgba(217, 45, 32, 0.11)',
+  rockerTop: '#2B2B28',
+  rockerBot: '#121211',
+} as const;
+
+/** Same keys as the day palette, but widened to `string` so night fits. */
+export type ThemeColors = { [K in keyof typeof day]: string };
+
+export const themes: Record<ThemeName, ThemeColors> = { day, night };
+
+/** Daylight Ceramic. Screens get the active palette from the theme provider (M3). */
+export const colors: ThemeColors = themes.day;
+
+/** Space Grotesk / JetBrains Mono are phase 2 (TTF assets); the doc allows these fallbacks. */
+export const fonts = {
+  sans: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
+  mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
+} as const;
+
+/** 4px spatial grid. */
 export const space = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 40,
+  xxs: 4,
+  xs: 8,
+  sm: 12,
+  md: 14,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
 } as const;
 
 export const radius = {
-  control: 8,
-  frame: 20,
+  card: 16,
+  sheet: 24,
+  button: 12,
+  control: 10,
+  input: 10,
+  badge: 6,
 } as const;
 
+export const borderWidth = {
+  card: 1.5,
+  hairline: 1,
+} as const;
+
+/** Type roles from the doc, with em tracking converted to px for React Native. */
 export const type = {
-  display: { fontSize: 30, lineHeight: 38 },
-  body: { fontSize: 16, lineHeight: 24 },
-  caption: { fontSize: 13, lineHeight: 20 },
+  wordmark: {
+    fontFamily: fonts.sans,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.54,
+  } satisfies TextStyle,
+  deviceName: {
+    fontFamily: fonts.sans,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: -0.15,
+  } satisfies TextStyle,
+  telemetry: {
+    fontFamily: fonts.mono,
+    fontSize: 24,
+    fontWeight: '700',
+    letterSpacing: 0,
+    fontVariant: ['tabular-nums'],
+  } satisfies TextStyle,
+  heading: {
+    fontFamily: fonts.sans,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: -0.32,
+  } satisfies TextStyle,
+  action: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  } satisfies TextStyle,
+  badge: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  } satisfies TextStyle,
+  diagnostic: {
+    fontFamily: fonts.mono,
+    fontSize: 10.5,
+    fontWeight: '400',
+    letterSpacing: 0,
+    lineHeight: 14.2,
+  } satisfies TextStyle,
 } as const;

@@ -60,7 +60,8 @@ npm test
 ## Architecture
 Layers, with dependencies pointing one way: **UI → State (Redux) → Domain → Adapters**. Storage sits beside State.
 
-- **Domain** holds the device model, commands, typed errors, the `DeviceAdapter` interface, `DeviceRepository` and `AdapterRegistry`. No protocol library is imported here.
+- **UI** follows [docs/relay_os_design_system.md](docs/relay_os_design_system.md) (RELAY // OS): semantic colour tokens, monospace telemetry readouts, and zero MQTT or HTTP imports inside screens.
+- **Domain** holds the common device model (`Device`, the brief's `CommonDeviceModel`), commands, typed errors, the `DeviceAdapter` interface, `DeviceRepository` and `AdapterRegistry`. No protocol library is imported here.
 - **Adapters** (`MqttAdapter`, `HttpAdapter`) are the only code that knows topics, JSON shapes, `fetch` or `mqtt.js`.
 - **Redux** stores only serializable data (device config, state, status, errors). Adapter instances live outside the store.
 - **Adding a protocol** = one new adapter class + one registry entry. No screen changes.

@@ -22,6 +22,11 @@ Centang semuanya sebelum mengirim email. Batas: **hari ke-7, 23:59 WIB**.
 - [ ] Tidak ada secret/kredensial yang ikut ter-commit
 - [ ] Repo **publik** (cek dari incognito) dan tetap publik sampai proses rekrutmen selesai
 
+## UI (mengikuti design system, tanpa mengorbankan must-have)
+- [ ] Kartu device, kontrol per tipe, dan banner error mengikuti `docs/relay_os_design_system.md`
+- [ ] Tidak ada import MQTT/HTTP di file layar atau komponen UI
+- [ ] Fitur fase 2 (rooms, tema gelap, `ALL OFF`, QR) hanya disebut di README/video kalau benar-benar jalan
+
 ## Slide arsitektur
 - [ ] 1 slide PDF/PNG di `/docs` (sudah ada: `architecture.pdf/png/drawio`)
 - [ ] Menunjukkan layer + arah dependensi, alur command, alur state update

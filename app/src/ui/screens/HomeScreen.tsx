@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, space, type } from '../theme/tokens';
+import { borderWidth, colors, radius, space, type } from '../theme/tokens';
 
 const house = require('../assets/images/house.png');
 
@@ -15,7 +15,7 @@ export function HomeScreen() {
           accessibilityLabel="Placeholder drawing of a house"
         />
       </View>
-      <Text style={styles.caption}>Home screen, still a placeholder</Text>
+      <Text style={styles.caption}>RELAY // OS · HOME SCREEN PLACEHOLDER</Text>
     </SafeAreaView>
   );
 }
@@ -23,8 +23,8 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.paper,
-    paddingHorizontal: space.xl,
+    backgroundColor: colors.canvas,
+    paddingHorizontal: space.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -32,19 +32,19 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 1,
     maxWidth: 320,
-    borderRadius: radius.frame,
+    borderRadius: radius.card,
     backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.hairline,
-    padding: space.lg,
+    borderWidth: borderWidth.card,
+    borderColor: colors.border,
+    padding: space.xl,
   },
   image: {
     width: '100%',
     height: '100%',
   },
   caption: {
-    ...type.caption,
-    color: colors.muted,
-    marginTop: space.lg,
+    ...type.badge,
+    color: colors.inkMuted,
+    marginTop: space.xl,
   },
 });

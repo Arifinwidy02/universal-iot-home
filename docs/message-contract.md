@@ -17,7 +17,7 @@ All payloads are JSON unless noted. `<deviceId>` is the device's stable id (e.g.
 ## MQTT
 
 Broker URL: `ws://<host>:9001` (WebSocket listener of Mosquitto). See "Host addresses" below for `<host>`.
-Topic prefix is configurable per device; default `home`. When using a public broker, use a unique prefix such as `home-<random>`.
+Topic prefix is configurable per device; default `home`. When using a public broker, use a unique prefix such as `home-<random>`. In the app it is stored as `config.topicPrefix`; the adapter builds the full topic as `<topicPrefix>/<deviceId>/<channel>`.
 
 | Topic | Direction | Payload | QoS / retain |
 |---|---|---|---|
@@ -32,14 +32,14 @@ Notes:
 
 ## HTTP (REST)
 
-Base URL: `http://<host>:3000`. See "Host addresses" below for `<host>`.
+Base URL: `http://<host>:3000`. See "Host addresses" below for `<host>`. The app stores this host-level URL as `config.baseUrl`; adapters append `/devices/<deviceId>`, so one base URL serves every HTTP device and the user never types the device id twice.
 
 | Request | Response |
 |---|---|
 | `GET /devices/<deviceId>` | `200` with state object |
 | `POST /devices/<deviceId>/set` with partial state object | `200` with the new state object |
 
-Error responses: `404` unknown device, `400` invalid payload. A network failure or no response within the timeout is treated as `RequestTimeout` / `DeviceOffline` by the adapter.
+Error responses: `404` unknown device or wrong path → `wrong_url`; `400` invalid payload → the adapter rejects the command before sending. A network failure or no response within the timeout is treated as `request_timeout` (no response) or `device_offline` (repeated failures) by the adapter.
 
 Polling: the `HttpAdapter` calls `GET` every `N` seconds (default 3 s, configurable). Consecutive failures mark the device offline; the next success marks it online again.
 
@@ -62,11 +62,13 @@ Validation rules (enforced in the domain model, not in the adapters):
 
 ## Error mapping
 
-Adapters translate library errors into the app's typed errors. The UI only knows these types.
+Adapters translate library and HTTP failures into one typed value, `AppError`, with a `kind` field. These four `kind` strings are the only error vocabulary in the app: the same strings are stored in the model's `errorType` and shown in the banner (design system §6.5). Do not introduce a second set of names.
 
-| Situation | AppError |
+| Situation | `kind` / `errorType` |
 |---|---|
-| MQTT broker cannot be reached / connection times out | `BrokerUnreachable` |
-| Malformed broker URL or base URL | `InvalidUrl` |
-| MQTT `status` = `offline`, or repeated HTTP polling failures | `DeviceOffline` |
-| HTTP request exceeds the timeout | `RequestTimeout` |
+| MQTT broker cannot be reached / connection times out | `broker_unreachable` |
+| Malformed broker or base URL, or the endpoint answers `404` | `wrong_url` |
+| MQTT `status` = `offline`, or repeated HTTP polling failures | `device_offline` |
+| HTTP request exceeds the timeout | `request_timeout` |
+
+`404` is folded into `wrong_url`: a wrong device path and a wrong host look the same to the person holding the phone, and both banners show the endpoint that failed. Any other status code (`5xx`) is `request_timeout` only when the request never completes; otherwise it is reported as `device_offline` with the status code in `errorMessage`.
