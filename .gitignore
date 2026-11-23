@@ -1,0 +1,12 @@
+.DS_Store
+*.log
+
+# Original take-home brief: reference only, not part of the deliverable.
+/Take-Home Test Universal IoT Home App.pdf
+
+# Node
+node_modules/
+
+# Simulator runtime output
+simulator/*.log
+simulator/.env
