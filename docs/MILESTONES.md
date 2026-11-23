@@ -39,12 +39,12 @@ Dokumen kerja pribadi (bahasa Indonesia). Boleh dihapus dari repo sebelum submit
 
 ## Design system dan urutan pengerjaan UI
 
-Tampilan mengikuti `docs/relay_os_design_system.md` (token, komponen, motion). Karena brief menaruh rooms, `ALL OFF`, dark mode, dan QR scan sebagai *nice to have*, pekerjaan UI dibagi dua fase, dan **fase 2 tidak dimulai sebelum 9 must-have hijau**.
+Tampilan mengikuti `docs/relay_os_design_system.md` (token, komponen, motion). Karena brief menaruh rooms, `ALL OFF`, dark mode, dan QR scan sebagai _nice to have_, pekerjaan UI dibagi dua fase, dan **fase 2 tidak dimulai sebelum 9 must-have hijau**.
 
-| Fase | Isi | Milestone | Tambahan jam |
-| --- | --- | --- | --- |
-| 1 | Token RELAY (palet, radius, type scale, mono fallback), kartu device §6.3, kontrol lampu/plug/sensor §6.4, banner error §6.5, sheet add/edit §6.6 tanpa QR | M3, M5, M6 | +2 |
-| 2 | Room filter bar §6.2, tema Night-Shift, `ALL OFF` dua langkah, sparkline, `SCAN QR` | setelah M8 | opsional |
+| Fase | Isi                                                                                                                                                        | Milestone  | Tambahan jam |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ |
+| 1    | Token RELAY (palet, radius, type scale, mono fallback), kartu device §6.3, kontrol lampu/plug/sensor §6.4, banner error §6.5, sheet add/edit §6.6 tanpa QR | M3, M5, M6 | +2           |
+| 2    | Room filter bar §6.2, tema Night-Shift, `ALL OFF` dua langkah, sparkline, `SCAN QR`                                                                        | setelah M8 | opsional     |
 
 Fase 1 menaikkan anggaran dari 18 ke ±20 jam, masih di dalam batas brief (15–20 jam). Kalau waktu mepet, potong dari fase 2 atau dari polish, **bukan** dari abstraksi adapter, dua protokol, error handling, atau persistence.
 
@@ -77,23 +77,23 @@ README.md
 
 ### M1 — Domain (2 jam)
 
-- [ ] `Device` = model umum: `id`, `name`, `room?`, `type`, `config`, `state`, plus field runtime `status` / `errorType` / `errorMessage`
-- [ ] `DeviceConfig` berupa union: `mqtt` (`brokerUrl`, `topicPrefix`) | `http` (`baseUrl`). Protokol hidup di `config.protocol`, tidak ada field kedua yang bisa melenceng
-- [ ] `DeviceType` (light/plug/sensor) + state per tipe; `Room` (`LIVING`/`STUDIO`/`BEDROOM`/`KITCHEN`/`BALCONY`)
-- [ ] Validasi: brightness 0–100, sensor read-only (command ke sensor ditolak)
-- [ ] `DeviceCommand` (`setPower`, `setBrightness`), `AppError` dengan `kind` snake_case: `broker_unreachable`, `wrong_url`, `device_offline`, `request_timeout`
-- [ ] Interface `DeviceAdapter` + `AdapterRegistry`
-- [ ] Test Jest untuk validasi dan parsing
-- [ ] Commit: `feat(domain): device model, commands, typed errors` + `test(domain): ...`
+- [x] `Device` = model umum: `id`, `name`, `room?`, `type`, `config`, `state`, plus field runtime `status` / `errorType` / `errorMessage`
+- [x] `DeviceConfig` berupa union: `mqtt` (`brokerUrl`, `topicPrefix`) | `http` (`baseUrl`). Protokol hidup di `config.protocol`, tidak ada field kedua yang bisa melenceng
+- [x] `DeviceType` (light/plug/sensor) + state per tipe; `Room` (`LIVING`/`STUDIO`/`BEDROOM`/`KITCHEN`/`BALCONY`)
+- [x] Validasi: brightness 0–100, sensor read-only (command ke sensor ditolak)
+- [x] `DeviceCommand` (`setPower`, `setBrightness`), `AppError` dengan `kind` snake_case: `broker_unreachable`, `wrong_url`, `device_offline`, `request_timeout`
+- [x] Interface `DeviceAdapter` + `AdapterRegistry`
+- [x] Test Jest untuk validasi dan parsing
+- [x] Commit: `feat(domain): device model, commands, typed errors` + `test(domain): ...`
 
 ### M2 — Simulator (2 jam)
 
-- [ ] `docker-compose.yml` Mosquitto dengan listener 1883 dan **9001 (websockets)**; di Mosquitto 2.x tambahkan `allow_anonymous true` di `mosquitto.conf`, kalau tidak koneksi dari luar ditolak
-- [ ] Node server: 1 lampu, 1 plug, 1 sensor; endpoint `GET /devices/:id`, `POST /devices/:id/set`
-- [ ] Publisher MQTT: state, status (retained), Last Will
-- [ ] Cara ubah state dari luar (CLI `node sim.js set plug-1 on` atau endpoint admin); sensor berubah otomatis tiap beberapa detik
-- [ ] Topic prefix unik jika memakai broker publik
-- [ ] Commit: `feat(simulator): ...`
+- [x] `docker-compose.yml` Mosquitto dengan listener 1883 dan **9001 (websockets)**; di Mosquitto 2.x tambahkan `allow_anonymous true` di `mosquitto.conf`, kalau tidak koneksi dari luar ditolak
+- [x] Node server: 1 lampu, 1 plug, 1 sensor; endpoint `GET /devices/:id`, `POST /devices/:id/set`
+- [x] Publisher MQTT: state, status (retained), Last Will
+- [x] Cara ubah state dari luar (CLI `node sim.js set plug-1 on` atau endpoint admin); sensor berubah otomatis tiap beberapa detik
+- [x] Topic prefix unik jika memakai broker publik
+- [x] Commit: `feat(simulator): ...`
 
 ### M3 — HttpAdapter + irisan vertikal (3 jam)
 
