@@ -37,6 +37,9 @@ export class MqttAdapter implements DeviceAdapter {
   private stopped = false;
   /** mqtt.js fires 'error' on every reconnect attempt; report the banner once. */
   private reportedError = false;
+  private sawStatus = false;
+  /** Fires when the broker is connected but the device never publishes status. */
+  private statusTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(device: Device, options: MqttAdapterOptions = {}) {
     if (device.config.protocol !== 'mqtt') {
@@ -83,10 +86,24 @@ export class MqttAdapter implements DeviceAdapter {
     client.on('connect', () => {
       this.attempt = 0;
       this.reportedError = false;
+      this.sawStatus = false;
       client.subscribe([this.topic('state'), this.topic('status')], { qos: 1 });
-      // Jangan kirim status apa pun di sini. Status `online` datang dari pesan
-      // `status` retained milik device; mengaku online dari event socket akan
-      // membuat kartu hijau padahal device sudah mati.
+
+      // Connected to the broker is not the same as the device being alive.
+      // If no retained `status` arrives, say so and name the topic.
+      if (this.statusTimer) clearTimeout(this.statusTimer);
+      this.statusTimer = setTimeout(() => {
+        if (this.sawStatus || this.stopped) return;
+        this.emit({ type: 'status', status: 'offline' });
+        this.emit({
+          type: 'error',
+          error: makeAppError(
+            'device_offline',
+            undefined,
+            `Device offline — no status published on ${this.topic('status')}`,
+          ),
+        });
+      }, 2000);
     });
 
     client.on('message', (topic: string, payload: Buffer) => {
@@ -123,6 +140,11 @@ export class MqttAdapter implements DeviceAdapter {
     if (topic === this.topic('status')) {
       const status = parseStatus(text.trim());
       if (!status) return;
+      this.sawStatus = true;
+      if (this.statusTimer) {
+        clearTimeout(this.statusTimer);
+        this.statusTimer = null;
+      }
       this.emit({ type: 'status', status });
       if (status === 'offline') {
         this.emit({
@@ -181,6 +203,8 @@ export class MqttAdapter implements DeviceAdapter {
     const client = this.client;
     this.client = null;
     this.listeners.clear();
+    if (this.statusTimer) clearTimeout(this.statusTimer);
+    this.statusTimer = null;
     if (client) client.end(true);
     return Promise.resolve();
   }

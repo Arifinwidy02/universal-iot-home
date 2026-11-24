@@ -190,19 +190,39 @@ export function DeviceCard({ device, repository, onEdit }: Props) {
             {formatErrorTitle(device.errorType)}
           </Text>
           <Text style={styles.bannerMessage}>
-            {device.errorMessage ?? 'Perangkat tidak merespons.'}
+            {device.errorMessage ??
+              (device.config.protocol === 'mqtt'
+                ? `Tidak ada pesan status di ${device.config.topicPrefix}/${device.id}/status.`
+                : `Tidak ada respons dari ${device.config.baseUrl}/devices/${device.id}.`)}
           </Text>
           <View style={styles.bannerActions}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => void repository.restart(device)}
-              style={({ pressed }) => [
-                styles.bannerButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.bannerButtonText}>↻ RETRY</Text>
-            </Pressable>
+            {(() => {
+              // Retrying a wrong URL only repeats the same 404; EDIT CONFIG is the
+              // action that can fix it.
+              const retryUseful = device.errorType !== 'wrong_url';
+              return (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: !retryUseful }}
+                  disabled={!retryUseful}
+                  onPress={() => void repository.restart(device)}
+                  style={({ pressed }) => [
+                    styles.bannerButton,
+                    !retryUseful && styles.bannerButtonDisabled,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.bannerButtonText,
+                      !retryUseful && styles.textMuted,
+                    ]}
+                  >
+                    ↻ RETRY
+                  </Text>
+                </Pressable>
+              );
+            })()}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Edit device config"
