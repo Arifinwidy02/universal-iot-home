@@ -121,9 +121,9 @@ README.md
 
 ### M6 — Error states (2 jam)
 
-- [ ] Broker mati, URL salah, device offline, request timeout → masing-masing pakai banner §6.5 (hazard stripe, `RETRY`, `EDIT CONFIG`), pesan menyebut endpoint yang gagal
-- [ ] Uji manual: matikan Mosquitto saat app jalan; ketik URL ngawur; hentikan HTTP mock
-- [ ] Pastikan tidak ada spinner abadi dan tidak ada banner error saat device sehat
+- [x] Broker mati, URL salah, device offline, request timeout → masing-masing pakai banner §6.5 (hazard stripe, `RETRY`, `EDIT CONFIG`), pesan menyebut endpoint yang gagal
+- [x] Uji manual: matikan Mosquitto saat app jalan; ketik URL ngawur; hentikan HTTP mock
+- [x] Pastikan tidak ada spinner abadi dan tidak ada banner error saat device sehat
 
 ### M7 — Test (1 jam)
 
