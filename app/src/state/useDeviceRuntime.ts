@@ -10,10 +10,12 @@ import {
   stateReceived,
   statusReceived,
 } from './slices/devicesSlice';
+import { createMqttAdapter } from '../adapters/mqtt/MqttAdapter';
 import { Device } from '../domain/type';
 
 const registry = new AdapterRegistry();
 registry.register('http', device => createHttpAdapter(device));
+registry.register('mqtt', device => createMqttAdapter(device));
 
 export function useDeviceRuntime(seed: Device[]) {
   const dispatch = useAppDispatch();

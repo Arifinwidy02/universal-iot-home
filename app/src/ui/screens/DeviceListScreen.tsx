@@ -25,6 +25,24 @@ const seed: Device[] = [
     errorMessage: null,
     state: { on: false },
   },
+  {
+    id: 'light-1',
+    name: 'Studio Desk Lamp',
+    room: 'STUDIO',
+    type: 'light',
+    config: {
+      protocol: 'mqtt',
+      brokerUrl: Platform.select({
+        android: 'ws://10.0.2.2:9001',
+        default: 'ws://localhost:9001',
+      })!,
+      topicPrefix: 'home',
+    },
+    status: 'offline',
+    errorType: null,
+    errorMessage: null,
+    state: { on: false, brightness: 70 },
+  },
 ];
 
 export function DeviceListScreen() {

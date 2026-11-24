@@ -102,8 +102,11 @@ export class HttpAdapter implements DeviceAdapter {
     try {
       response = await this.fetchImpl(url, {
         ...init,
-        signal: controller.signal,
-      });
+        // mqtt's typings pull @types/node in, which redeclares AbortSignal with
+        // Node's `onabort`. RN's fetch only cares about the runtime behaviour, so
+        // the cast keeps the adapter compiling without weakening anything real.
+        signal: controller.signal as unknown as AbortSignal,
+      } as RequestInit);
     } catch (error) {
       // AbortController fired -> we cancelled it ourselves -> timeout.
       if (controller.signal.aborted) {

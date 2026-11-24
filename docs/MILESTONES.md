@@ -106,10 +106,10 @@ README.md
 
 ### M4 — MqttAdapter (3 jam)
 
-- [ ] mqtt.js lewat **WebSocket**: `ws://10.0.2.2:9001` di Android emulator, `ws://localhost:9001` di iOS simulator; polyfill (mis. `buffer`, `process`) jika Metro mengeluh. Pastikan versi mqtt.js yang dipakai jalan di RN sebelum membangun adapter di atasnya
-- [ ] Subscribe `state` dan `status`, publish `set`, timeout koneksi awal, reconnect dengan backoff
-- [ ] `end()` saat device dihapus
-- [ ] Commit: `feat(adapter): MqttAdapter with subscription and reconnect`
+- [x] mqtt.js lewat **WebSocket**: `ws://10.0.2.2:9001` di Android emulator, `ws://localhost:9001` di iOS simulator; polyfill (mis. `buffer`, `process`) jika Metro mengeluh. Pastikan versi mqtt.js yang dipakai jalan di RN sebelum membangun adapter di atasnya
+- [x] Subscribe `state` dan `status`, publish `set`, timeout koneksi awal, reconnect dengan backoff
+- [x] `end()` saat device dihapus
+- [x] Commit: `feat(adapter): MqttAdapter with subscription and reconnect`
 
 ### M5 — CRUD + persistence (3 jam)
 
