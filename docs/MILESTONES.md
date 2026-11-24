@@ -97,12 +97,12 @@ README.md
 
 ### M3 — HttpAdapter + irisan vertikal (3 jam)
 
-- [ ] `HttpAdapter` (fetch + `AbortController`, polling interval configurable)
-- [ ] `DeviceRepository` minimal, slice `devices`, `DeviceListScreen` mengikuti kartu §6.3 + readout §7 (mono, `tabular-nums`)
-- [ ] Formatter readout: `On, 70%` / `Off` / `26.5°C · 61% RH` / judul error — satu fungsi, dipakai kartu dan sheet
-- [ ] Toggle plug dari UI → simulator berubah; ubah dari simulator → UI berubah
-- [ ] **Titik cek:** jika ini jalan, risiko terbesar sudah lewat
-- [ ] Commit: `feat(adapter): HttpAdapter with polling` dst.
+- [x] `HttpAdapter` (fetch + `AbortController`, polling interval configurable)
+- [x] `DeviceRepository` minimal, slice `devices`, `DeviceListScreen` mengikuti kartu §6.3 + readout §7 (mono, `tabular-nums`)
+- [x] Formatter readout: `On, 70%` / `Off` / `26.5°C · 61% RH` / judul error — satu fungsi, dipakai kartu dan sheet
+- [x] Toggle plug dari UI → simulator berubah; ubah dari simulator → UI berubah
+- [x] **Titik cek:** jika ini jalan, risiko terbesar sudah lewat
+- [x] Commit: `feat(adapter): HttpAdapter with polling` dst.
 
 ### M4 — MqttAdapter (3 jam)
 

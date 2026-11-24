@@ -1,8 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { HomeScreen } from '../screens/HomeScreen';
+import { DeviceListScreen } from '../screens/DeviceListScreen';
 
 export type RootStackParamList = {
-  Home: undefined;
+  DeviceList: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -10,10 +10,10 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export function RootNavigator() {
   return (
     <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName="DeviceList"
       screenOptions={{ headerShown: false }}
     >
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="DeviceList" component={DeviceListScreen} />
     </Stack.Navigator>
   );
 }
