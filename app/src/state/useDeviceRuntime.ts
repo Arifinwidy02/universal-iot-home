@@ -1,49 +1,72 @@
 // app/src/state/useDeviceRuntime.ts
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { AdapterRegistry } from '../domain/AdapterRegistry';
 import { DeviceRepository } from '../domain/DeviceRepository';
 import { createHttpAdapter } from '../adapters/http/HttpAdapter';
-import { useAppDispatch } from './hooks';
+import { createMqttAdapter } from '../adapters/mqtt/MqttAdapter';
+import { useAppDispatch, useAppSelector } from './hooks';
 import {
-  deviceAdded,
   errorReceived,
   stateReceived,
   statusReceived,
 } from './slices/devicesSlice';
-import { createMqttAdapter } from '../adapters/mqtt/MqttAdapter';
-import { Device } from '../domain/type';
+import type { Device } from '../domain/type';
 
 const registry = new AdapterRegistry();
 registry.register('http', device => createHttpAdapter(device));
 registry.register('mqtt', device => createMqttAdapter(device));
 
-export function useDeviceRuntime(seed: Device[]) {
+export function useDeviceRuntime() {
   const dispatch = useAppDispatch();
+  const devices = useAppSelector(state => state.devices.items);
   const repository = useMemo(() => new DeviceRepository(registry), []);
+  const running = useRef(new Map<string, string>());
 
   useEffect(() => {
-    seed.forEach(d => dispatch(deviceAdded(d)));
-    seed.forEach(device => {
-      void repository.start(device, (id, event) => {
-        if (event.type === 'state')
-          dispatch(stateReceived({ id, state: event.state }));
-        if (event.type === 'status')
-          dispatch(statusReceived({ id, status: event.status }));
-        if (event.type === 'error') {
-          dispatch(
-            errorReceived({
-              id,
-              errorType: event.error.kind,
-              message: event.error.message,
-            }),
-          );
-        }
-      });
+    const keyOf = (d: Device) =>
+      `${d.config.protocol}|${JSON.stringify(d.config)}`;
+
+    devices.forEach(device => {
+      const key = keyOf(device);
+      const current = running.current.get(device.id);
+      if (current === key) return; // already running with this config
+
+      void repository.stop(device.id).then(() =>
+        repository.start(device, (id, event) => {
+          if (event.type === 'state')
+            dispatch(stateReceived({ id, state: event.state }));
+          if (event.type === 'status')
+            dispatch(statusReceived({ id, status: event.status }));
+          if (event.type === 'error') {
+            dispatch(
+              errorReceived({
+                id,
+                errorType: event.error.kind,
+                message: event.error.message,
+              }),
+            );
+          }
+        }),
+      );
+      running.current.set(device.id, key);
     });
+
+    const ids = new Set(devices.map(d => d.id));
+    running.current.forEach((_, id) => {
+      if (!ids.has(id)) {
+        void repository.stop(id);
+        running.current.delete(id);
+      }
+    });
+  }, [devices, dispatch, repository]);
+
+  useEffect(() => {
+    const map = running.current;
     return () => {
-      seed.forEach(d => void repository.stop(d.id));
+      map.forEach((_, id) => void repository.stop(id));
+      map.clear();
     };
-  }, [dispatch, repository, seed]);
+  }, [repository]);
 
   return repository;
 }

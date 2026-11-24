@@ -113,11 +113,11 @@ README.md
 
 ### M5 — CRUD + persistence (3 jam)
 
-- [ ] Form Add digenerate dari skema konfigurasi per protokol (MQTT: broker URL + topic prefix; HTTP: base URL), plus chip `Room / Zone` dan preview read-only §6.6
-- [ ] Edit dan delete (cleanup adapter saat delete), delete 2 langkah
-- [ ] redux-persist: whitelist **hanya konfigurasi** device (`id`, `name`, `room`, `type`, `config`); `state`/`status`/`error` tidak ikut
-- [ ] Saat start: load device → buat adapter → subscribe; status awal `offline` sampai adapter melapor
-- [ ] Layar kontrol sesuai §6.4: lampu (dimmer rail + power), plug (rocker `I/O`), sensor (read-only telemetry)
+- [x] Form Add digenerate dari skema konfigurasi per protokol (MQTT: broker URL + topic prefix; HTTP: base URL), plus chip `Room / Zone` dan preview read-only §6.6
+- [x] Edit dan delete (cleanup adapter saat delete), delete 2 langkah
+- [x] redux-persist: whitelist **hanya konfigurasi** device (`id`, `name`, `room`, `type`, `config`); `state`/`status`/`error` tidak ikut
+- [x] Saat start: load device → buat adapter → subscribe; status awal `offline` sampai adapter melapor
+- [x] Layar kontrol sesuai §6.4: lampu (dimmer rail + power), plug (rocker `I/O`), sensor (read-only telemetry)
 
 ### M6 — Error states (2 jam)
 
