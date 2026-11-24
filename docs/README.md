@@ -54,6 +54,14 @@ cd app
 npm test
 ```
 
+The suite covers the domain rules, both adapters with a mocked transport, the
+persistence transform, the device reducer, and the readout formatter. Nothing
+touches a real broker, socket, or emulator, so it runs in well under a second.
+
+Polling is covered with Jest fake timers
+(`__tests__/adapters/HttpAdapter.polling.test.ts`), which is how the 3-second
+interval is asserted without waiting.
+
 ## Why this stack
 <!-- Why React Native + Redux Toolkit + Jest, why Android, why mqtt.js over WebSocket. Be honest about trade-offs (e.g. productivity vs. native). -->
 

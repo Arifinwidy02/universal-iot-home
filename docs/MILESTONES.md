@@ -127,9 +127,9 @@ README.md
 
 ### M7 — Test (1 jam)
 
-- [ ] Minimal: model + satu adapter dengan transport di-mock (disarankan keduanya)
-- [ ] Fake timer Jest untuk polling
-- [ ] Perintah test tercantum di README
+- [x] Minimal: model + satu adapter dengan transport di-mock (disarankan keduanya)
+- [x] Fake timer Jest untuk polling
+- [x] Perintah test tercantum di README
 
 ### M8 — Non-kode (2 jam)
 
