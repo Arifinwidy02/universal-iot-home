@@ -94,9 +94,9 @@ describe('formatErrorTitle', () => {
 
 describe('formatSyncBadge', () => {
   it('names the mechanism per protocol', () => {
-    expect(formatSyncBadge(device({ type: 'plug', state: { on: false } }))).toBe(
-      'HTTP • POLL 3s',
-    );
+    expect(
+      formatSyncBadge(device({ type: 'plug', state: { on: false } })),
+    ).toBe('HTTP • POLL 3s');
     expect(
       formatSyncBadge(
         device({
@@ -110,5 +110,17 @@ describe('formatSyncBadge', () => {
         }),
       ),
     ).toBe('MQTT • SUB');
+  });
+  it('shows the error title, not a fake 0.0C, when a sensor has no reading', () => {
+    const sensor = device({
+      type: 'sensor',
+      state: { temperature: 0, humidity: 0 },
+      status: 'error',
+      errorType: 'device_offline',
+      errorMessage: 'Device offline — no status published',
+    });
+
+    expect(formatReadout(sensor)).toBe('DEVICE OFFLINE');
+    expect(formatReadout(sensor)).not.toContain('°C');
   });
 });
