@@ -1,60 +1,97 @@
 // app/src/ui/screens/DeviceListScreen.tsx
-import { Platform, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
 import type { Device } from '../../domain/type';
+import type { DeviceDraft } from '../../domain/createDevice';
+import { makeDeviceId, toDevice } from '../../domain/createDevice';
 import { useDeviceRuntime } from '../../state/useDeviceRuntime';
-import { useAppSelector } from '../../state/hooks';
-import { colors, space, type } from '../theme/tokens';
+import { useAppDispatch, useAppSelector } from '../../state/hooks';
+import {
+  deviceAdded,
+  deviceRemoved,
+  deviceUpdated,
+} from '../../state/slices/devicesSlice';
 import { DeviceCard } from '../components/DeviceCard';
-
-const seed: Device[] = [
-  {
-    id: 'plug-1',
-    name: 'Living Room Plug',
-    room: 'LIVING',
-    type: 'plug',
-    config: {
-      protocol: 'http',
-      baseUrl: Platform.select({
-        android: 'http://10.0.2.2:3000',
-        default: 'http://localhost:3000',
-      })!,
-    },
-    status: 'offline',
-    errorType: null,
-    errorMessage: null,
-    state: { on: false },
-  },
-  {
-    id: 'light-1',
-    name: 'Studio Desk Lamp',
-    room: 'STUDIO',
-    type: 'light',
-    config: {
-      protocol: 'mqtt',
-      brokerUrl: Platform.select({
-        android: 'ws://10.0.2.2:9001',
-        default: 'ws://localhost:9001',
-      })!,
-      topicPrefix: 'home',
-    },
-    status: 'offline',
-    errorType: null,
-    errorMessage: null,
-    state: { on: false, brightness: 70 },
-  },
-];
+import { DeviceSheet } from '../components/DeviceSheet';
+import { colors, radius, space, type } from '../theme/tokens';
 
 export function DeviceListScreen() {
-  const repository = useDeviceRuntime(seed);
+  const dispatch = useAppDispatch();
+  const repository = useDeviceRuntime();
   const devices = useAppSelector(state => state.devices.items);
+
+  const [sheetDevice, setSheetDevice] = useState<Device | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  function openAdd() {
+    setSheetDevice(null);
+    setSheetOpen(true);
+  }
+
+  function openEdit(device: Device) {
+    setSheetDevice(device);
+    setSheetOpen(true);
+  }
+
+  function save(draft: DeviceDraft) {
+    if (sheetDevice) {
+      dispatch(deviceUpdated({ id: sheetDevice.id, patch: draft }));
+    } else {
+      const id = makeDeviceId(
+        draft.name,
+        devices.map(d => d.id),
+      );
+      dispatch(deviceAdded(toDevice({ ...draft, id })));
+    }
+    setSheetOpen(false);
+  }
+
+  async function remove(id: string) {
+    // Stop the adapter first so no late event lands on a removed device.
+    await repository.stop(id);
+    dispatch(deviceRemoved({ id }));
+    setSheetOpen(false);
+  }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <Text style={styles.title}>RELAY // OS</Text>
-      {devices.map(device => (
-        <DeviceCard key={device.id} device={device} repository={repository} />
-      ))}
+      <View style={styles.header}>
+        <Text style={styles.title}>RELAY // OS</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add device"
+          onPress={openAdd}
+          style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
+        >
+          <Text style={styles.addButtonText}>+ ADD DEVICE</Text>
+        </Pressable>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.list}>
+        {devices.length === 0 ? (
+          <Text style={styles.empty}>
+            Belum ada device. Tekan + ADD DEVICE untuk menambahkan.
+          </Text>
+        ) : (
+          devices.map(device => (
+            <DeviceCard
+              key={device.id}
+              device={device}
+              repository={repository}
+              onEdit={() => openEdit(device)}
+            />
+          ))
+        )}
+      </ScrollView>
+
+      <DeviceSheet
+        visible={sheetOpen}
+        device={sheetDevice}
+        onClose={() => setSheetOpen(false)}
+        onSave={save}
+        onDelete={remove}
+      />
     </SafeAreaView>
   );
 }
@@ -65,5 +102,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
     paddingHorizontal: space.lg,
   },
-  title: { ...type.wordmark, color: colors.ink, marginVertical: space.lg },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: space.lg,
+  },
+  title: { ...type.wordmark, color: colors.ink },
+  addButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.button,
+    paddingHorizontal: space.sm,
+    paddingVertical: space.xs,
+  },
+  addButtonText: { ...type.action, color: '#FFFFFF' },
+  list: { paddingBottom: space.xxl },
+  empty: {
+    ...type.diagnostic,
+    color: colors.inkMuted,
+    marginTop: space.lg,
+  },
+  pressed: { opacity: 0.85 },
 });

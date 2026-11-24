@@ -6,6 +6,7 @@ import {
   formatReadout,
   formatSyncBadge,
 } from '../format/readout';
+import { DimmerRail } from './DimmerRoll';
 import { borderWidth, colors, radius, space, type } from '../theme/tokens';
 
 const TYPE_LABEL: Record<Device['type'], string> = {
@@ -17,16 +18,44 @@ const TYPE_LABEL: Record<Device['type'], string> = {
 type Props = {
   device: Device;
   repository: DeviceRepository;
+  onEdit: () => void;
 };
 
 /** §6.3 universal device card: same shell for every protocol and type. */
-export function DeviceCard({ device, repository }: Props) {
+export function DeviceCard({ device, repository, onEdit }: Props) {
   const online = device.status === 'online';
   const faulty = device.status !== 'online';
+  /**
+   * A sensor that has not reported yet holds the placeholder state
+   * {temperature: 0, humidity: 0}. Showing "0.0°C" claims a measurement that
+   * does not exist, so render a dash until the adapter marks it online. Values
+   * are not used for this check: a working sensor may legitimately read 0.
+   */
+  const hasReading = device.type === 'sensor' && online;
 
   const togglePower = () => {
     if (device.type === 'sensor') return; // sensors are read-only
     void repository.send(device.id, { kind: 'setPower', on: !device.state.on });
+  };
+
+  /**
+   * §6.4A: releasing the dimmer commits `{ on: pct > 0, brightness: pct }`.
+   * A single command cannot carry both fields, so send the power change first
+   * (the lamp may currently be off) and then the level.
+   */
+  const commitBrightness = async (brightness: number) => {
+    const shouldBeOn = brightness > 0;
+    try {
+      if (device.type === 'light' && device.state.on !== shouldBeOn) {
+        await repository.send(device.id, {
+          kind: 'setPower',
+          on: shouldBeOn,
+        });
+      }
+      await repository.send(device.id, { kind: 'setBrightness', brightness });
+    } catch {
+      // The adapter already reports failures through its error event.
+    }
   };
 
   return (
@@ -35,15 +64,24 @@ export function DeviceCard({ device, repository }: Props) {
         <View style={styles.headerText}>
           <View style={styles.metaRow}>
             <Text style={styles.badge}>{TYPE_LABEL[device.type]}</Text>
-            {device.room ? <Text style={styles.room}>{device.room}</Text> : null}
+            {device.room ? (
+              <Text style={styles.room}>{device.room}</Text>
+            ) : null}
           </View>
           <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
             {device.name}
           </Text>
         </View>
         <View style={styles.headerBadges}>
-          <View style={[styles.pill, online ? styles.pillOnline : styles.pillFault]}>
-            <Text style={[styles.pillText, online ? styles.pillTextOnline : styles.pillTextFault]}>
+          <View
+            style={[styles.pill, online ? styles.pillOnline : styles.pillFault]}
+          >
+            <Text
+              style={[
+                styles.pillText,
+                online ? styles.pillTextOnline : styles.pillTextFault,
+              ]}
+            >
               {online ? 'ONLINE' : 'ERROR'}
             </Text>
           </View>
@@ -60,13 +98,27 @@ export function DeviceCard({ device, repository }: Props) {
             <View style={styles.bodyLeft}>
               <Text style={styles.label}>RELAY CIRCUIT</Text>
               <Text style={styles.readout}>{formatReadout(device)}</Text>
-              <View style={[styles.pill, device.state.on ? styles.pillEnergized : styles.pillCut]}>
-                <Text style={[styles.pillText, device.state.on ? styles.pillTextOn : styles.pillTextMuted]}>
+              <View
+                style={[
+                  styles.pill,
+                  device.state.on ? styles.pillEnergized : styles.pillCut,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.pillText,
+                    device.state.on ? styles.pillTextOn : styles.pillTextMuted,
+                  ]}
+                >
                   {device.state.on ? 'ENERGIZED' : 'CUT'}
                 </Text>
               </View>
             </View>
-            <Rocker on={device.state.on} disabled={!online} onToggle={togglePower} />
+            <Rocker
+              on={device.state.on}
+              disabled={!online}
+              onToggle={togglePower}
+            />
           </>
         ) : null}
 
@@ -87,7 +139,12 @@ export function DeviceCard({ device, repository }: Props) {
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={[styles.powerLabel, device.state.on && styles.powerLabelOn]}>
+              <Text
+                style={[
+                  styles.powerLabel,
+                  device.state.on && styles.powerLabelOn,
+                ]}
+              >
                 {device.state.on ? 'ON' : 'OFF'}
               </Text>
             </Pressable>
@@ -98,12 +155,16 @@ export function DeviceCard({ device, repository }: Props) {
           <View style={styles.sensorRow}>
             <View style={styles.metric}>
               <Text style={styles.label}>TEMP</Text>
-              <Text style={styles.readout}>{device.state.temperature.toFixed(1)}°C</Text>
+              <Text style={styles.readout}>
+                {hasReading ? `${device.state.temperature.toFixed(1)}°C` : '—'}
+              </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.metric}>
               <Text style={styles.label}>HUMIDITY</Text>
-              <Text style={styles.readout}>{Math.round(device.state.humidity)}%</Text>
+              <Text style={styles.readout}>
+                {hasReading ? `${Math.round(device.state.humidity)}%` : '—'}
+              </Text>
             </View>
             <View style={styles.telemetryTag}>
               <Text style={styles.telemetryTagText}>READ-ONLY</Text>
@@ -112,10 +173,22 @@ export function DeviceCard({ device, repository }: Props) {
         ) : null}
       </View>
 
+      {device.type === 'light' ? (
+        <View style={[styles.dimmerWrap, !online && styles.bodyDisabled]}>
+          <DimmerRail
+            value={device.state.brightness}
+            disabled={!online}
+            onCommit={brightness => void commitBrightness(brightness)}
+          />
+        </View>
+      ) : null}
+
       {faulty ? (
         <View style={styles.banner}>
           <View style={styles.bannerStripe} />
-          <Text style={styles.bannerTitle}>{formatErrorTitle(device.errorType)}</Text>
+          <Text style={styles.bannerTitle}>
+            {formatErrorTitle(device.errorType)}
+          </Text>
           <Text style={styles.bannerMessage}>
             {device.errorMessage ?? 'Perangkat tidak merespons.'}
           </Text>
@@ -123,13 +196,24 @@ export function DeviceCard({ device, repository }: Props) {
             <Pressable
               accessibilityRole="button"
               onPress={() => void repository.restart(device)}
-              style={({ pressed }) => [styles.bannerButton, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.bannerButton,
+                pressed && styles.pressed,
+              ]}
             >
               <Text style={styles.bannerButtonText}>↻ RETRY</Text>
             </Pressable>
-            <View style={[styles.bannerButton, styles.bannerButtonDisabled]}>
-              <Text style={[styles.bannerButtonText, styles.textMuted]}>EDIT CONFIG</Text>
-            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Edit device config"
+              onPress={onEdit}
+              style={({ pressed }) => [
+                styles.bannerButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.bannerButtonText}>EDIT CONFIG</Text>
+            </Pressable>
           </View>
         </View>
       ) : null}
@@ -139,9 +223,13 @@ export function DeviceCard({ device, repository }: Props) {
           STATE: {formatReadout(device)}
         </Text>
         <View style={styles.footerActions}>
-          {/* EDIT and DEL arrive with the add/edit sheet in M5. */}
-          <Text style={[styles.footerButton, styles.textMuted]}>EDIT</Text>
-          <Text style={[styles.footerButton, styles.textMuted]}>DEL</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Edit ${device.name}`}
+            onPress={onEdit}
+          >
+            <Text style={styles.footerButton}>EDIT</Text>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -163,14 +251,15 @@ function Rocker({ on, disabled, onToggle }: RockerProps) {
       accessibilityState={{ checked: on, disabled }}
       onPress={onToggle}
       disabled={disabled}
-      style={({ pressed }) => [
-        styles.rockerHousing,
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.rockerHousing, pressed && styles.pressed]}
     >
-      <Text style={[styles.rockerLabel, on && styles.rockerLabelActive]}>I</Text>
+      <Text style={[styles.rockerLabel, on && styles.rockerLabelActive]}>
+        I
+      </Text>
       <View style={[styles.rockerSlit, on && styles.rockerSlitOn]} />
-      <Text style={[styles.rockerLabel, !on && styles.rockerLabelActive]}>O</Text>
+      <Text style={[styles.rockerLabel, !on && styles.rockerLabelActive]}>
+        O
+      </Text>
     </Pressable>
   );
 }
@@ -214,10 +303,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: borderWidth.hairline,
+    marginRight: 12,
   },
-  pillOnline: { backgroundColor: colors.onlineSoft, borderColor: colors.online },
+  pillOnline: {
+    backgroundColor: colors.onlineSoft,
+    borderColor: colors.online,
+  },
   pillFault: { backgroundColor: colors.dangerBg, borderColor: colors.danger },
-  pillEnergized: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  pillEnergized: {
+    backgroundColor: colors.accentSoft,
+    borderColor: colors.accent,
+  },
   pillCut: { backgroundColor: colors.recessed, borderColor: colors.border },
   pillText: type.badge,
   pillTextOnline: { color: colors.online },
@@ -268,7 +364,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   rockerSlitOn: { backgroundColor: colors.accent },
-  sensorRow: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: space.md },
+  sensorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: space.md,
+  },
   metric: { flex: 1, gap: space.xxs },
   divider: {
     width: borderWidth.hairline,
@@ -317,6 +418,11 @@ const styles = StyleSheet.create({
   },
   bannerButtonDisabled: { borderColor: colors.border },
   bannerButtonText: { ...type.action, color: colors.danger },
+  dimmerWrap: {
+    paddingHorizontal: space.md,
+    paddingBottom: space.md,
+    marginTop: -space.xs,
+  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
