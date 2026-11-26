@@ -1,13 +1,26 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { DeviceDraft } from '../../domain/createDevice';
-import type { Device, DeviceType, Protocol, Room } from '../../domain/type';
 import { borderWidth, colors, radius, space, type } from '../theme/tokens';
+import {
+  ROOMS,
+  type Device,
+  type DeviceType,
+  type Protocol,
+  type Room,
+} from '../../domain/type';
 
 const TYPES: DeviceType[] = ['light', 'plug', 'sensor'];
 const PROTOCOLS: Protocol[] = ['mqtt', 'http'];
-const ROOMS: Room[] = ['LIVING', 'STUDIO', 'BEDROOM', 'KITCHEN', 'BALCONY'];
 
 type Props = {
   visible: boolean;
@@ -92,10 +105,7 @@ export function DeviceSheet({
     >
       <View style={styles.backdrop}>
         <View
-          style={[
-            styles.sheet,
-            { paddingBottom: space.xl + insets.bottom },
-          ]}
+          style={[styles.sheet, { paddingBottom: space.xl + insets.bottom }]}
         >
           <View style={styles.header}>
             <View>
@@ -302,7 +312,11 @@ const styles = StyleSheet.create({
   },
   subtitle: { ...type.badge, color: colors.inkMuted },
   title: { ...type.heading, color: colors.ink, marginTop: space.xxs },
-  close: { ...type.heading, color: colors.inkMuted, paddingHorizontal: space.xs },
+  close: {
+    ...type.heading,
+    color: colors.inkMuted,
+    paddingHorizontal: space.xs,
+  },
   errorBanner: {
     backgroundColor: colors.dangerBg,
     borderWidth: borderWidth.hairline,

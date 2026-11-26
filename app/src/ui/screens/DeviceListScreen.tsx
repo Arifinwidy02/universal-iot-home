@@ -14,6 +14,8 @@ import {
 import { DeviceCard } from '../components/DeviceCard';
 import { DeviceSheet } from '../components/DeviceSheet';
 import { colors, radius, space, type } from '../theme/tokens';
+import { RoomFilterBar } from '../components/RoomFilterBar';
+import { countByRoom, filterByRoom, type RoomFilter } from '../format/room';
 
 export function DeviceListScreen() {
   const dispatch = useAppDispatch();
@@ -22,6 +24,9 @@ export function DeviceListScreen() {
 
   const [sheetDevice, setSheetDevice] = useState<Device | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [roomFilter, setRoomFilter] = useState<RoomFilter>('ALL');
+  const counts = countByRoom(devices);
+  const visible = filterByRoom(devices, roomFilter);
 
   function openAdd() {
     setSheetDevice(null);
@@ -66,13 +71,23 @@ export function DeviceListScreen() {
         </Pressable>
       </View>
 
+      {devices.length > 0 ? (
+        <RoomFilterBar
+          value={roomFilter}
+          counts={counts}
+          onChange={setRoomFilter}
+        />
+      ) : null}
+
       <ScrollView contentContainerStyle={styles.list}>
         {devices.length === 0 ? (
           <Text style={styles.empty}>
             Belum ada device. Tekan + ADD DEVICE untuk menambahkan.
           </Text>
+        ) : visible.length === 0 ? (
+          <Text style={styles.empty}>Belum ada device di {roomFilter}.</Text>
         ) : (
-          devices.map(device => (
+          visible.map(device => (
             <DeviceCard
               key={device.id}
               device={device}

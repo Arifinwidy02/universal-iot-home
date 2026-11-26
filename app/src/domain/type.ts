@@ -1,7 +1,13 @@
 export type DeviceType = 'light' | 'plug' | 'sensor';
 
-/** Matches the room chips in the design system (§6.2 / §6.6). */
-export type Room = 'LIVING' | 'STUDIO' | 'BEDROOM' | 'KITCHEN' | 'BALCONY';
+export const ROOMS = [
+  'LIVING',
+  'STUDIO',
+  'BEDROOM',
+  'KITCHEN',
+  'BALCONY',
+] as const;
+export type Room = (typeof ROOMS)[number];
 
 export type MqttConfig = {
   protocol: 'mqtt';
