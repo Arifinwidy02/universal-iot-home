@@ -225,10 +225,13 @@ Satu kegagalan polling cukup untuk menandai perangkat offline: perangkat smart h
 - [v] Form tambah/edit/hapus perangkat per protokol
 - [v] Persistence konfigurasi perangkat
 - [v] Empat jenis error state dengan banner yang menyebut endpoint
-- [v] Filter ruangan di daftar perangkat
-- [v] 52 tes di 12 suite; typecheck bersih; lint nol error
 - [v] Slide arsitektur (PDF/PNG) di `docs/`
 - [v] Video demo
+
+## Nice-to-Have
+
+- [v] Filter ruangan di daftar perangkat
+- [v] CI Testing
 
 ## Cara saya memakai alat AI
 
