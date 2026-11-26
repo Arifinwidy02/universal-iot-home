@@ -4,6 +4,10 @@
 > **Product:** Universal IoT Home App (Protocol-Agnostic Smart Home Controller)  
 > **Aesthetic Direction:** Tactile Industrial Hardware / Architectural Switchboard (inspired by Dieter Rams / Braun & Teenage Engineering)
 
+**Authority of this document.** This is the source of truth for **appearance**: colour, typography, spacing, components, motion. It is *not* the source of truth for the data model or the wire format — those are `docs/message-contract.md` (topics, endpoints, payloads) and `app/src/domain/` (types). Section 7 has been aligned with both; if they ever disagree again, fix this document, not the contract.
+
+**Scope against the brief.** The take-home brief lists 9 must-haves; rooms, a scene (`ALL OFF`), dark mode and QR scan are explicitly *nice to have*. Everything in this document is allowed, but the UI work is split into two phases: phase 1 covers the must-haves in RELAY styling, phase 2 adds the optional extras. Nothing in phase 2 may start while a must-have is red. Phase 2 is not implemented in this submission — see "Belum dikerjakan" in the root `README.md`.
+
 ---
 
 ## 1. Design Philosophy & Anti-Slop Guardrails
@@ -107,7 +111,7 @@ Diagonal 45-degree repeating stripe used exclusively on the top strip of an inli
   2. **2-Step Guarded `ALL OFF` Scene Button:**
      - *Idle:* Surface background, reads `ALL OFF`.
      - *Armed (1st tap):* Turns solid `accent` (`#FF4D00`) with white text `CONFIRM?`. Auto-disarms after `3000ms` if not tapped again.
-     - *Executed (2nd tap):* Sends `{ on: false }` to all online `light` and `plug` devices via `DeviceManager`, displays toast confirmation.
+     - *Executed (2nd tap):* Sends `{ on: false }` to all online `light` and `plug` devices via `DeviceRepository`, displays toast confirmation.
 
 ### 6.2 Room Filter Bar
 - Horizontally scrollable row of compact monospace chips (`ALL`, `LIVING`, `STUDIO`, `BEDROOM`, `KITCHEN`, `BALCONY`) showing device count per room.
@@ -159,6 +163,8 @@ When a device encounters a fault, its card border and background switch to `dang
 | `device_offline` | `DEVICE OFFLINE` | `Device offline — Last will status: offline` (MQTT) / `No heartbeat from hardware endpoint` (HTTP) |
 | `request_timeout` | `REQUEST TIMEOUT` | `Request timeout — Device did not respond within 3000ms` |
 
+These four keys are one vocabulary, not two: they are exactly the `kind` values of `AppError` in `app/src/domain/model/error.ts` and the strings stored in the model's `errorType`. `wrong_url` covers both a malformed URL and an endpoint that answers `404` — from the user's side both mean "the address is wrong", and the banner shows the endpoint that failed. The full mapping lives in `docs/message-contract.md`.
+
 ### 6.6 Add / Edit Device Bottom Sheet
 Triggered by the fixed bottom `+ ADD DEVICE` CTA or any card's `EDIT` button.
 - **Header:** `PATCHBAY // ADAPTER CONFIG` subtitle, `ADD DEVICE` or `EDIT DEVICE` title, optional `[⊞] SCAN QR` button (Add mode only), and `✕` close button.
@@ -168,8 +174,8 @@ Triggered by the fixed bottom `+ ADD DEVICE` CTA or any card's `EDIT` button.
   3. `Device Type` (3-column segmented selector: `LIGHT`, `SMART PLUG`, `SENSOR`)
   4. `Protocol Adapter` (2-column segmented selector: `MQTT`, `HTTP (REST)`)
   5. **Dynamic Connection Panel (`recessed` container):**
-     - **If MQTT:** `Broker URL *` (must start with `mqtt://`, `mqtts://`, `ws://`, `wss://`) + `Device Topic Prefix *` + live read-only preview of `SUB <topic>/state`, `PUB <topic>/set`, `LWT <topic>/status`.
-     - **If HTTP:** `Base URL *` (must start with `http://`, `https://`) + live read-only preview of `GET <baseUrl>`, `POST <baseUrl>/set`.
+     - **If MQTT:** `Broker URL *` (`ws://` or `wss://`; React Native cannot open a raw `mqtt://` TCP socket without a native module) + `Device Topic Prefix *` (e.g. `home`) + live read-only preview of `SUB <prefix>/<deviceId>/state`, `PUB <prefix>/<deviceId>/set`, `LWT <prefix>/<deviceId>/status`.
+     - **If HTTP:** `Base URL *` host-level (must start with `http://`, `https://`, e.g. `http://10.0.2.2:3000`) + live read-only preview of `GET <baseUrl>/devices/<deviceId>`, `POST <baseUrl>/devices/<deviceId>/set`. The device id is appended by the adapter, never typed by the user twice.
 - **Inline Validation Banner:** Displays clear field validation errors at the top of the form without dismissing the sheet.
 - **Footer Actions:**
   - Primary `SAVE DEVICE` / `SAVE CHANGES` button in `accent` (`#FF4D00`).
@@ -179,37 +185,82 @@ Triggered by the fixed bottom `+ ADD DEVICE` CTA or any card's `EDIT` button.
 
 ## 7. Data & State Formatting Contract (UI Layer)
 
-The UI must render these exact normalized state strings from `CommonDeviceModel`:
+The UI must render these exact normalized state strings:
 - **Light (On):** `On, 70%`
 - **Light (Off):** `Off`
 - **Smart Plug (On/Off):** `On` / `Off`
 - **Sensor:** `26.5°C · 61% RH`
 - **Offline / Error:** `<errorTitle>` (e.g., `DEVICE OFFLINE`, `BROKER UNREACHABLE`)
 
-### Normalized Model Shape (Reference)
+### Common model — implementation type
+
+"`CommonDeviceModel`" is the concept; in code it is the TypeScript type `Device` in `app/src/domain/model/type.ts`. There is exactly one model — no separate UI copy, no adapter-specific type leaking upward.
+
+```ts
+type Room = 'LIVING' | 'STUDIO' | 'BEDROOM' | 'KITCHEN' | 'BALCONY';
+
+type MqttConfig = { protocol: 'mqtt'; brokerUrl: string; topicPrefix: string };
+type HttpConfig = { protocol: 'http'; baseUrl: string };
+type DeviceConfig = MqttConfig | HttpConfig;
+
+type DeviceStatus = 'online' | 'offline' | 'error';
+type DeviceErrorType =
+  | 'broker_unreachable'
+  | 'wrong_url'
+  | 'device_offline'
+  | 'request_timeout';
+
+type DeviceBase = {
+  id: string;
+  name: string;
+  room?: Room;
+  config: DeviceConfig;
+  status: DeviceStatus;
+  errorType: DeviceErrorType | null;
+  errorMessage: string | null;
+};
+
+type LightDevice  = DeviceBase & { type: 'light';  state: { on: boolean; brightness: number } };
+type PlugDevice   = DeviceBase & { type: 'plug';   state: { on: boolean } };
+type SensorDevice = DeviceBase & { type: 'sensor'; state: { temperature: number; humidity: number } };
+
+type Device = LightDevice | PlugDevice | SensorDevice;
+```
+
+One device, as the app holds it:
+
 ```json
 {
   "id": "lamp-01",
   "name": "Studio Desk Lamp",
   "room": "STUDIO",
-  "type": "light | plug | sensor",
-  "protocol": "mqtt | http",
   "config": {
-    "brokerUrl": "mqtt://test.mosquitto.org:1883",
-    "topic": "home/lamp-01",
-    "baseUrl": "http://localhost:3001/devices/plug-01"
+    "protocol": "mqtt",
+    "brokerUrl": "ws://10.0.2.2:9001",
+    "topicPrefix": "home"
   },
-  "status": "online | offline | error",
-  "errorType": "broker_unreachable | wrong_url | device_offline | request_timeout | null",
-  "errorMessage": "string | null",
-  "state": {
-    "on": true,
-    "brightness": 70,
-    "temperature": 26.5,
-    "humidity": 61
-  }
+  "type": "light",
+  "status": "online",
+  "errorType": null,
+  "errorMessage": null,
+  "state": { "on": true, "brightness": 70 }
 }
 ```
+
+### Field ownership
+
+| Field | Written by | Persisted? |
+| :--- | :--- | :--- |
+| `id`, `name`, `room`, `type`, `config` | Add / Edit sheet | **yes** — this is the only subset `redux-persist` stores |
+| `state` | adapter: poll result, subscription message, or the device's confirmation after a `set` | no — fetched again on launch |
+| `status`, `errorType`, `errorMessage` | `DeviceRepository`, from adapter events | no — recomputed on launch |
+
+Rules that keep the model honest:
+- **`state` is per type, not one flat object with optional keys.** `{ "on": true }` alone cannot be told apart between a light and a plug, and a light without `brightness` would silently pass. Render by narrowing on `type`; the readout formatter switches on the same field.
+- **Protocol lives in `config.protocol`.** There is no second `protocol` field at the top level to drift out of sync.
+- **`topicPrefix` is `home`, not `home/lamp-01`.** The full topic is `<topicPrefix>/<id>/state`; see §6.6 and `docs/message-contract.md`.
+- **Status and errors are never persisted.** A stale `online` badge after a restart would be a lie; the card starts at `offline` until the adapter reports otherwise.
+- **A malformed number is not a state.** Payloads go through `parseState` in `src/domain/rules/parse.ts`; a bad payload produces `errorType`, never a half-filled state object.
 
 ---
 
@@ -217,9 +268,12 @@ The UI must render these exact normalized state strings from `CommonDeviceModel`
 
 Before marking any UI screen complete, verify:
 - [ ] Zero direct MQTT or HTTP imports exist inside UI component files.
-- [ ] Both `Daylight Ceramic` and `Night-Shift` palettes are wired via semantic theme tokens.
+- [ ] Both `Daylight Ceramic` and `Night-Shift` palettes are wired via semantic theme tokens (both exist as tokens from phase 1; the theme toggle itself is phase 2).
 - [ ] All numerical readouts use monospace typography with `tabular-nums`.
 - [ ] All 3 device types (`Light`, `Smart Plug`, `Sensor`) render their distinct tactile controls.
 - [ ] `EDIT` and 2-step `DELETE` are accessible from every device card.
 - [ ] All 4 error states render the caution banner cleanly with working `RETRY` and `EDIT CONFIG` actions and zero crashes.
 - [ ] Adding/editing a device persists across app restarts and immediately subscribes (MQTT) or starts polling (HTTP).
+- [ ] No persisted `status` / `errorType`: after a cold start every card is `offline` until its adapter reports in.
+- [ ] Phase 1 only: room filter, `ALL OFF`, Night-Shift theme, QR scan and sparkline are built **after** all 9 brief must-haves are green.
+- [ ] Fonts may use the platform fallbacks in §3 (`System` / `Menlo` / `monospace`); bundling Space Grotesk + JetBrains Mono as TTF is phase 2.

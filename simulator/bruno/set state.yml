@@ -1,0 +1,33 @@
+info:
+  name: set state
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL_3000}}/devices/plug-1/set"
+  body:
+    type: json
+    data: |-
+      {
+        "on": true
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("status is 200", function () {
+          expect(res.getStatus()).to.equal(200);
+        });
+        test("state is applied", function () {
+          expect(res.getBody().on).to.equal(true);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

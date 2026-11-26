@@ -1,0 +1,4 @@
+name: emulator
+variables:
+  - name: BASE_URL_3000
+    value: http://10.0.2.2:3000
