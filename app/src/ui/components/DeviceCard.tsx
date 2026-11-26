@@ -21,28 +21,16 @@ type Props = {
   onEdit: () => void;
 };
 
-/** §6.3 universal device card: same shell for every protocol and type. */
 export function DeviceCard({ device, repository, onEdit }: Props) {
   const online = device.status === 'online';
   const faulty = device.status !== 'online';
-  /**
-   * A sensor that has not reported yet holds the placeholder state
-   * {temperature: 0, humidity: 0}. Showing "0.0°C" claims a measurement that
-   * does not exist, so render a dash until the adapter marks it online. Values
-   * are not used for this check: a working sensor may legitimately read 0.
-   */
   const hasReading = device.type === 'sensor' && online;
 
   const togglePower = () => {
-    if (device.type === 'sensor') return; // sensors are read-only
+    if (device.type === 'sensor') return;
     void repository.send(device.id, { kind: 'setPower', on: !device.state.on });
   };
 
-  /**
-   * §6.4A: releasing the dimmer commits `{ on: pct > 0, brightness: pct }`.
-   * A single command cannot carry both fields, so send the power change first
-   * (the lamp may currently be off) and then the level.
-   */
   const commitBrightness = async (brightness: number) => {
     const shouldBeOn = brightness > 0;
     try {
@@ -54,7 +42,6 @@ export function DeviceCard({ device, repository, onEdit }: Props) {
       }
       await repository.send(device.id, { kind: 'setBrightness', brightness });
     } catch {
-      // The adapter already reports failures through its error event.
     }
   };
 
@@ -197,8 +184,6 @@ export function DeviceCard({ device, repository, onEdit }: Props) {
           </Text>
           <View style={styles.bannerActions}>
             {(() => {
-              // Retrying a wrong URL only repeats the same 404; EDIT CONFIG is the
-              // action that can fix it.
               const retryUseful = device.errorType !== 'wrong_url';
               return (
                 <Pressable
@@ -262,7 +247,6 @@ type RockerProps = {
   onToggle: () => void;
 };
 
-/** §6.4B mechanical rocker: I on top, LED slit in the middle, O below. */
 function Rocker({ on, disabled, onToggle }: RockerProps) {
   return (
     <Pressable
@@ -415,8 +399,6 @@ const styles = StyleSheet.create({
     gap: space.xxs,
     overflow: 'hidden',
   },
-  // Flat stand-in for the diagonal hazard stripe in §6.5; the striped version
-  // needs a pattern asset and belongs to the polish pass, not M3.
   bannerStripe: {
     height: 6,
     marginHorizontal: -space.xs,

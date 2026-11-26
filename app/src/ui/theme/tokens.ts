@@ -1,12 +1,5 @@
 import { Platform, type TextStyle } from 'react-native';
 
-/**
- * RELAY // OS design tokens.
- * Source of truth: docs/relay_os_design_system.md. Components read these
- * tokens only — never a hardcoded hex value, and never a token that is not in
- * that document.
- */
-
 export type ThemeName = 'day' | 'night';
 
 const day = {
@@ -45,21 +38,17 @@ const night = {
   rockerBot: '#121211',
 } as const;
 
-/** Same keys as the day palette, but widened to `string` so night fits. */
 export type ThemeColors = { [K in keyof typeof day]: string };
 
 export const themes: Record<ThemeName, ThemeColors> = { day, night };
 
-/** Daylight Ceramic. Screens get the active palette from the theme provider (M3). */
 export const colors: ThemeColors = themes.day;
 
-/** Space Grotesk / JetBrains Mono are phase 2 (TTF assets); the doc allows these fallbacks. */
 export const fonts = {
   sans: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
   mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
 } as const;
 
-/** 4px spatial grid. */
 export const space = {
   xxs: 4,
   xs: 8,
@@ -84,7 +73,6 @@ export const borderWidth = {
   hairline: 1,
 } as const;
 
-/** Type roles from the doc, with em tracking converted to px for React Native. */
 export const type = {
   wordmark: {
     fontFamily: fonts.sans,

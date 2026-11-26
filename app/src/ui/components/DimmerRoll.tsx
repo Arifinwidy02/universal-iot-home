@@ -1,4 +1,3 @@
-// app/src/ui/components/DimmerRoll.tsx
 import { useRef, useState, type ComponentRef } from 'react';
 import {
   PanResponder,
@@ -10,14 +9,11 @@ import {
 import { borderWidth, colors, radius, space, type } from '../theme/tokens';
 
 type Props = {
-  /** 0-100 */
   value: number;
   disabled?: boolean;
-  /** Called on release, and only when the value actually changed. */
   onCommit: (brightness: number) => void;
 };
 
-/** Bands printed under the rail, positioned at their true percentage. */
 const MARKS = [0, 25, 50, 75, 100] as const;
 
 export function DimmerRail({ value, disabled, onCommit }: Props) {
@@ -25,15 +21,8 @@ export function DimmerRail({ value, disabled, onCommit }: Props) {
   const geom = useRef({ x: 0, w: 0 });
   const [drag, setDrag] = useState<number | null>(null);
   const shown = drag ?? value;
-  /** Last value the finger chose; the release event's own coords are unreliable. */
   const pending = useRef<number | null>(null);
 
-  /**
-   * Android reports locationX = 0 on grant and on release often enough that
-   * deriving the track's left edge from a touch (pageX - locationX) produced a
-   * bogus origin and committed brightness 0. Measure the view instead, retrying
-   * until it has a non-zero width.
-   */
   const syncGeometry = () => {
     const node = trackRef.current;
     if (!node) return;
@@ -49,10 +38,6 @@ export function DimmerRail({ value, disabled, onCommit }: Props) {
   const percentFromPage = (pageX: number): number | null => {
     const { x, w } = geom.current;
     if (w <= 0) return null;
-    // Android emits spurious moves with pageX = 0 just before release; the rail
-    // never starts at the window edge, so that value cannot be a real touch.
-    // Ignore it, but CLAMP genuine drags that run off the rail so dragging past
-    // either end still lands on 0 / 100.
     if (pageX <= 0) return null;
     return Math.max(0, Math.min(100, Math.round(((pageX - x) / w) * 100)));
   };
@@ -74,8 +59,6 @@ export function DimmerRail({ value, disabled, onCommit }: Props) {
       setDrag(pct);
     },
     onPanResponderRelease: () => {
-      // Never re-read coordinates here: commit the last position the finger
-      // actually chose.
       const pct = pending.current;
       pending.current = null;
       setDrag(null);
@@ -159,11 +142,6 @@ const styles = StyleSheet.create({
     height: 16,
     marginTop: space.xxs,
   },
-  /**
-   * Marks sit at their exact percentage instead of relying on space-between:
-   * that distributes text *boxes* of different widths, so the "75" label sat at
-   * ~71% of the track and pressing it read as 72%.
-   */
   markWrap: {
     position: 'absolute',
     transform: [{ translateX: -12 }],

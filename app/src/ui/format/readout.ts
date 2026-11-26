@@ -11,10 +11,6 @@ export function formatErrorTitle(errorType: DeviceErrorType | null): string {
   return errorType ? ERROR_TITLES[errorType] : 'ERROR';
 }
 
-/**
- * Exactly the strings in design system §7. The card footer and (later) the
- * sheet preview both call this — never a second implementation.
- */
 export function formatReadout(device: Device): string {
   if (device.status !== 'online') {
     return formatErrorTitle(device.errorType);
@@ -33,7 +29,6 @@ export function formatReadout(device: Device): string {
   }
 }
 
-/** Badge on the card header, §6.3. */
 export function formatSyncBadge(device: Device): string {
   return device.config.protocol === 'mqtt' ? 'MQTT • SUB' : 'HTTP • POLL 3s';
 }

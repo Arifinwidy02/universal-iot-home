@@ -11,7 +11,6 @@ const ROOMS: Room[] = ['LIVING', 'STUDIO', 'BEDROOM', 'KITCHEN', 'BALCONY'];
 
 type Props = {
   visible: boolean;
-  /** null = add mode */
   device: Device | null;
   onClose: () => void;
   onSave: (draft: DeviceDraft) => void;
@@ -36,7 +35,6 @@ export function DeviceSheet({
   const [error, setError] = useState<string | null>(null);
   const [armed, setArmed] = useState(false);
 
-  // Reset the form every time the sheet opens.
   useEffect(() => {
     if (!visible) return;
     setName(device?.name ?? '');
@@ -70,7 +68,7 @@ export function DeviceSheet({
     }
     setError(null);
     onSave({
-      id: device?.id ?? '', // diisi pemanggil untuk mode add
+      id: device?.id ?? '',
       name: name.trim(),
       room,
       type: deviceType,
@@ -96,8 +94,6 @@ export function DeviceSheet({
         <View
           style={[
             styles.sheet,
-            // The gesture/navigation bar covers the last ~48dp; without this the
-            // DELETE button sits underneath it and looks missing.
             { paddingBottom: space.xl + insets.bottom },
           ]}
         >
@@ -297,8 +293,6 @@ const styles = StyleSheet.create({
     paddingBottom: space.xl,
     maxHeight: '90%',
   },
-  // flexShrink lets the form give space back to the footer buttons, so
-  // SAVE/DELETE stay on screen on short viewports instead of being pushed off.
   scroll: { flexGrow: 0, flexShrink: 1 },
   header: {
     flexDirection: 'row',
@@ -383,11 +377,6 @@ const styles = StyleSheet.create({
   },
   primaryText: { ...type.action, color: '#FFFFFF' },
   footerRow: { flexDirection: 'row', gap: space.xs, marginTop: space.xs },
-  /**
-   * flexShrink: 0 matters. The sheet is a column with maxHeight, so a button
-   * with flex: 1 collapses to almost no height and its label is clipped away —
-   * DELETE DEVICE rendered as an empty bordered pill.
-   */
   footerButton: {
     flex: 1,
     flexShrink: 0,
