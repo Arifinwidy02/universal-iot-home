@@ -1,5 +1,5 @@
 import { isBrightness, isPercent } from './validate';
-import type { ConnectionStatus, DeviceState, DeviceType } from './type';
+import type { ConnectionStatus, DeviceState, DeviceType } from '../model/type';
 
 export type ParseResult =
   | { ok: true; state: DeviceState }

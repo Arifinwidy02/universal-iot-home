@@ -1,4 +1,4 @@
-import { ROOMS, type Device, type Room } from '../../domain/type';
+import { ROOMS, type Device, type Room } from '../../domain/model/type';
 
 export type RoomFilter = 'ALL' | Room;
 

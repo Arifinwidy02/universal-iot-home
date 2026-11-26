@@ -1,9 +1,9 @@
-import { AdapterRegistry } from '../../src/domain/AdapterRegistry';
+import { AdapterRegistry } from '../../../src/domain/connection/AdapterRegistry';
 import type {
   AdapterFactory,
   DeviceAdapter,
-} from '../../src/domain/DeviceAdapter';
-import type { Device } from '../../src/domain/type';
+} from '../../../src/domain/connection/DeviceAdapter';
+import type { Device } from '../../../src/domain/model/type';
 
 function makeFakeAdapter(device: Device): DeviceAdapter {
   return {

@@ -1,4 +1,4 @@
-import type { Device, DeviceErrorType } from '../../domain/type';
+import type { Device, DeviceErrorType } from '../../domain/model/type';
 
 const ERROR_TITLES: Record<DeviceErrorType, string> = {
   broker_unreachable: 'BROKER UNREACHABLE',

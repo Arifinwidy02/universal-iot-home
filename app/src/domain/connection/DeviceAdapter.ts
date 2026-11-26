@@ -1,6 +1,11 @@
-import type { DeviceCommand } from './command';
-import type { AppError } from './error';
-import type { ConnectionStatus, Device, DeviceState, Protocol } from './type';
+import type { DeviceCommand } from '../rules/command';
+import type { AppError } from '../model/error';
+import type {
+  ConnectionStatus,
+  Device,
+  DeviceState,
+  Protocol,
+} from '../model/type';
 
 export type AdapterEvent =
   | { type: 'state'; state: DeviceState }

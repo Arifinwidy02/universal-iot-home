@@ -1,7 +1,7 @@
 // app/src/state/useDeviceRuntime.ts
 import { useEffect, useMemo, useRef } from 'react';
-import { AdapterRegistry } from '../domain/AdapterRegistry';
-import { DeviceRepository } from '../domain/DeviceRepository';
+import { AdapterRegistry } from '../domain/connection/AdapterRegistry';
+import { DeviceRepository } from '../domain/connection/DeviceRepository';
 import { createHttpAdapter } from '../adapters/http/HttpAdapter';
 import { createMqttAdapter } from '../adapters/mqtt/MqttAdapter';
 import { useAppDispatch, useAppSelector } from './hooks';
@@ -10,7 +10,7 @@ import {
   stateReceived,
   statusReceived,
 } from './slices/devicesSlice';
-import type { Device } from '../domain/type';
+import type { Device } from '../domain/model/type';
 
 const registry = new AdapterRegistry();
 registry.register('http', device => createHttpAdapter(device));

@@ -1,5 +1,5 @@
 import { MqttAdapter } from '../../src/adapters/mqtt/MqttAdapter';
-import type { LightDevice } from '../../src/domain/type';
+import type { LightDevice } from '../../src/domain/model/type';
 
 const lamp: LightDevice = {
   id: 'light-1',

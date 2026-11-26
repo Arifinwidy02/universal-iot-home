@@ -2,7 +2,7 @@ import reducer, {
   deviceAdded,
   deviceUpdated,
 } from '../../src/state/slices/devicesSlice';
-import type { PlugDevice } from '../../src/domain/type';
+import type { PlugDevice } from '../../src/domain/model/type';
 
 const plug: PlugDevice = {
   id: 'plug-1',

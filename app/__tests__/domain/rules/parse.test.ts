@@ -1,4 +1,4 @@
-import { parseState, parseStatus } from '../../src/domain/parse';
+import { parseState, parseStatus } from '../../../src/domain/rules/parse';
 
 describe('parseState', () => {
   it('parses a light state and keeps only known fields', () => {

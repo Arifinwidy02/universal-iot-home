@@ -1,4 +1,4 @@
-import type { Device, DeviceType } from '../domain/type';
+import type { Device, DeviceType } from './type';
 
 /**
  * Placeholder state for a device that has not reported yet.

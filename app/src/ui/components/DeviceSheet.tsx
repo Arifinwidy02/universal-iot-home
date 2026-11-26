@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { DeviceDraft } from '../../domain/createDevice';
+import type { DeviceDraft } from '../../domain/model/createDevice';
 import { borderWidth, colors, radius, space, type } from '../theme/tokens';
 import {
   ROOMS,
@@ -17,7 +17,7 @@ import {
   type DeviceType,
   type Protocol,
   type Room,
-} from '../../domain/type';
+} from '../../domain/model/type';
 
 const TYPES: DeviceType[] = ['light', 'plug', 'sensor'];
 const PROTOCOLS: Protocol[] = ['mqtt', 'http'];

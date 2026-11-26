@@ -1,5 +1,5 @@
 import { DeviceCommand } from './command';
-import { Device } from './type';
+import { Device } from '../model/type';
 
 export type CommandRejection =
   | { kind: 'ReadOnlyDevice'; message: string }

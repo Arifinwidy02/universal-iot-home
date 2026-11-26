@@ -1,5 +1,5 @@
 import { countByRoom, filterByRoom } from '../../src/ui/format/room';
-import type { Device, Room } from '../../src/domain/type';
+import type { Device, Room } from '../../src/domain/model/type';
 
 function plug(id: string, room?: Room): Device {
   return {

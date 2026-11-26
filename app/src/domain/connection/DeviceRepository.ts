@@ -1,15 +1,18 @@
 // app/src/domain/DeviceRepository.ts
 import type { AdapterRegistry } from './AdapterRegistry';
 import type { DeviceAdapter } from './DeviceAdapter';
-import type { DeviceCommand } from './command';
-import type { Device } from './type';
+import type { DeviceCommand } from '../rules/command';
+import type { Device } from '../model/type';
 
 export class DeviceRepository {
   private readonly adapters = new Map<string, DeviceAdapter>();
   /** Kept so ↻ RETRY can rebuild an adapter with the same event handler. */
   private readonly handlers = new Map<
     string,
-    (id: string, event: Parameters<Parameters<DeviceAdapter['subscribe']>[0]>[0]) => void
+    (
+      id: string,
+      event: Parameters<Parameters<DeviceAdapter['subscribe']>[0]>[0],
+    ) => void
   >();
 
   constructor(private readonly registry: AdapterRegistry) {}

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { DeviceRepository } from '../../domain/DeviceRepository';
-import type { Device } from '../../domain/type';
+import type { DeviceRepository } from '../../domain/connection/DeviceRepository';
+import type { Device } from '../../domain/model/type';
 import {
   formatErrorTitle,
   formatReadout,
@@ -41,8 +41,7 @@ export function DeviceCard({ device, repository, onEdit }: Props) {
         });
       }
       await repository.send(device.id, { kind: 'setBrightness', brightness });
-    } catch {
-    }
+    } catch {}
   };
 
   return (

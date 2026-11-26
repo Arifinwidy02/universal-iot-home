@@ -1,4 +1,4 @@
-import { commandToPayload } from '../../src/domain/command';
+import { commandToPayload } from '../../../src/domain/rules/command';
 
 describe('commandToPayload', () => {
   it('maps each command to the partial state object the simulator expects', () => {

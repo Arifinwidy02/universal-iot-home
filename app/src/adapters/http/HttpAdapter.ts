@@ -3,11 +3,14 @@ import type {
   AdapterListener,
   DeviceAdapter,
   Unsubscribe,
-} from '../../domain/DeviceAdapter';
-import { commandToPayload, type DeviceCommand } from '../../domain/command';
-import { makeAppError, type AppError } from '../../domain/error';
-import { parseState } from '../../domain/parse';
-import type { ConnectionStatus, Device } from '../../domain/type';
+} from '../../domain/connection/DeviceAdapter';
+import {
+  commandToPayload,
+  type DeviceCommand,
+} from '../../domain/rules/command';
+import { makeAppError, type AppError } from '../../domain/model/error';
+import { parseState } from '../../domain/rules/parse';
+import type { ConnectionStatus, Device } from '../../domain/model/type';
 
 export type HttpAdapterOptions = {
   /** Spec badge: HTTP • POLL 3s */

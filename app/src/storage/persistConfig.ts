@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { PersistConfig } from 'redux-persist';
 import { createTransform } from 'redux-persist';
-import type { Device } from '../domain/type';
+import type { Device } from '../domain/model/type';
 import type { DevicesState } from '../state/slices/devicesSlice';
 
 function rehydrate(device: Device): Device {

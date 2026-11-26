@@ -3,7 +3,7 @@ import {
   formatReadout,
   formatSyncBadge,
 } from '../../src/ui/format/readout';
-import type { Device } from '../../src/domain/type';
+import type { Device } from '../../src/domain/model/type';
 
 function device(overrides: Partial<Device> & Pick<Device, 'type'>): Device {
   const base = {

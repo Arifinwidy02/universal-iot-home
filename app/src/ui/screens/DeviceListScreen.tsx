@@ -1,9 +1,9 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
-import type { Device } from '../../domain/type';
-import type { DeviceDraft } from '../../domain/createDevice';
-import { makeDeviceId, toDevice } from '../../domain/createDevice';
+import type { Device } from '../../domain/model/type';
+import type { DeviceDraft } from '../../domain/model/createDevice';
+import { makeDeviceId, toDevice } from '../../domain/model/createDevice';
 import { useDeviceRuntime } from '../../state/useDeviceRuntime';
 import { useAppDispatch, useAppSelector } from '../../state/hooks';
 import {

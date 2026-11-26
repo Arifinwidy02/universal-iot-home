@@ -1,5 +1,5 @@
 import type { AdapterFactory, DeviceAdapter } from './DeviceAdapter';
-import type { Device, Protocol } from './type';
+import type { Device, Protocol } from '../model/type';
 
 export class AdapterRegistry {
   private readonly factories = new Map<Protocol, AdapterFactory>();

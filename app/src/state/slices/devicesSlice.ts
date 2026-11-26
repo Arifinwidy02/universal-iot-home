@@ -4,9 +4,9 @@ import type {
   Device,
   DeviceErrorType,
   DeviceState,
-} from '../../domain/type';
-import type { DeviceDraft } from '../../domain/createDevice';
-import { initialStateFor } from '../../domain/initialState';
+} from '../../domain/model/type';
+import type { DeviceDraft } from '../../domain/model/createDevice';
+import { initialStateFor } from '../../domain/model/initialState';
 
 type DevicesState = { items: Device[] };
 

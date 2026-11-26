@@ -1,6 +1,6 @@
 // app/__tests__/storage/persistConfig.test.ts
 import { persistConfig } from '../../src/storage/persistConfig';
-import type { Device } from '../../src/domain/type';
+import type { Device } from '../../src/domain/model/type';
 
 const plug: Device = {
   id: 'plug-1',

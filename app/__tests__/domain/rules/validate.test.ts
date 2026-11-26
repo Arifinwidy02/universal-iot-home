@@ -2,8 +2,8 @@ import {
   canAcceptCommand,
   checkCommand,
   isBrightness,
-} from '../../src/domain/validate';
-import type { Device } from '../../src/domain/type';
+} from '../../../src/domain/rules/validate';
+import type { Device } from '../../../src/domain/model/type';
 
 const light: Device = {
   id: 'light-1',
