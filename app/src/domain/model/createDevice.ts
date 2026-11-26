@@ -1,7 +1,10 @@
 // app/src/domain/createDevice.ts
-import type { DeviceConfig, DeviceType, Room } from './type';
+
 import { initialStateFor } from './initialState';
-import type { Device } from './type';
+import { DeviceType } from './type';
+import { Room } from './type';
+import { DeviceConfig } from './type';
+import { Device } from './type';
 
 export type DeviceDraft = {
   id: string;

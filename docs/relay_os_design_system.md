@@ -6,7 +6,7 @@
 
 **Authority of this document.** This is the source of truth for **appearance**: colour, typography, spacing, components, motion. It is *not* the source of truth for the data model or the wire format — those are `docs/message-contract.md` (topics, endpoints, payloads) and `app/src/domain/` (types). Section 7 has been aligned with both; if they ever disagree again, fix this document, not the contract.
 
-**Scope against the brief.** The take-home brief lists 9 must-haves; rooms, a scene (`ALL OFF`), dark mode and QR scan are explicitly *nice to have*. Everything in this document is allowed, but the UI work is split into two phases in `docs/MILESTONES.md`: phase 1 covers the must-haves in RELAY styling, phase 2 adds the optional extras. Nothing in phase 2 may start while a must-have is red.
+**Scope against the brief.** The take-home brief lists 9 must-haves; rooms, a scene (`ALL OFF`), dark mode and QR scan are explicitly *nice to have*. Everything in this document is allowed, but the UI work is split into two phases: phase 1 covers the must-haves in RELAY styling, phase 2 adds the optional extras. Nothing in phase 2 may start while a must-have is red. Phase 2 is not implemented in this submission — see "Belum dikerjakan" in the root `README.md`.
 
 ---
 
@@ -163,7 +163,7 @@ When a device encounters a fault, its card border and background switch to `dang
 | `device_offline` | `DEVICE OFFLINE` | `Device offline — Last will status: offline` (MQTT) / `No heartbeat from hardware endpoint` (HTTP) |
 | `request_timeout` | `REQUEST TIMEOUT` | `Request timeout — Device did not respond within 3000ms` |
 
-These four keys are one vocabulary, not two: they are exactly the `kind` values of `AppError` in `app/src/domain/error.ts` and the strings stored in the model's `errorType`. `wrong_url` covers both a malformed URL and an endpoint that answers `404` — from the user's side both mean "the address is wrong", and the banner shows the endpoint that failed. The full mapping lives in `docs/message-contract.md`.
+These four keys are one vocabulary, not two: they are exactly the `kind` values of `AppError` in `app/src/domain/model/error.ts` and the strings stored in the model's `errorType`. `wrong_url` covers both a malformed URL and an endpoint that answers `404` — from the user's side both mean "the address is wrong", and the banner shows the endpoint that failed. The full mapping lives in `docs/message-contract.md`.
 
 ### 6.6 Add / Edit Device Bottom Sheet
 Triggered by the fixed bottom `+ ADD DEVICE` CTA or any card's `EDIT` button.
@@ -194,7 +194,7 @@ The UI must render these exact normalized state strings:
 
 ### Common model — implementation type
 
-"`CommonDeviceModel`" is the concept; in code it is the TypeScript type `Device` in `app/src/domain/type.ts`. There is exactly one model — no separate UI copy, no adapter-specific type leaking upward.
+"`CommonDeviceModel`" is the concept; in code it is the TypeScript type `Device` in `app/src/domain/model/type.ts`. There is exactly one model — no separate UI copy, no adapter-specific type leaking upward.
 
 ```ts
 type Room = 'LIVING' | 'STUDIO' | 'BEDROOM' | 'KITCHEN' | 'BALCONY';
@@ -260,7 +260,7 @@ Rules that keep the model honest:
 - **Protocol lives in `config.protocol`.** There is no second `protocol` field at the top level to drift out of sync.
 - **`topicPrefix` is `home`, not `home/lamp-01`.** The full topic is `<topicPrefix>/<id>/state`; see §6.6 and `docs/message-contract.md`.
 - **Status and errors are never persisted.** A stale `online` badge after a restart would be a lie; the card starts at `offline` until the adapter reports otherwise.
-- **A malformed number is not a state.** Payloads go through `parseState` in `src/domain/parse.ts`; a bad payload produces `errorType`, never a half-filled state object.
+- **A malformed number is not a state.** Payloads go through `parseState` in `src/domain/rules/parse.ts`; a bad payload produces `errorType`, never a half-filled state object.
 
 ---
 

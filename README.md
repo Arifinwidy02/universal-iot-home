@@ -4,8 +4,8 @@ Satu aplikasi mobile untuk mengendalikan perangkat smart home apa pun protokolny
 
 Perangkat yang dikendalikan adalah simulator di dalam repo ini — tidak ada hardware sungguhan, tidak ada akun, tidak ada backend milik sendiri.
 
-**Video demo:** `<isi tautannya di sini sebelum submit>`
-**Slide arsitektur:** [docs/architecture.pdf](docs/architecture.pdf) · PNG: [docs/architecture.png](docs/architecture.png) · sumber yang bisa diedit: [docs/architecture.drawio](docs/architecture.drawio)
+**Video demo:** `https://drive.google.com/file/d/1PdqnvYrAKszHiS_ZIpiG8xpeIHyZAA_W/view?usp=sharing`
+**Slide arsitektur:** [PDF](docs/architecture.pdf) · [PNG](docs/architecture.png) · **Milestone:** [docs/MILESTONES.md](docs/MILESTONES.md)
 
 Status pengerjaan ada di bagian [Status](#status) — satu-satunya tempat yang menyatakan apa yang sudah jadi dan apa yang belum.
 
@@ -27,18 +27,18 @@ tht-ruparupa/
 │  └─ src/
 │     ├─ ui/            layar, komponen, token tema — nol import MQTT/HTTP
 │     ├─ state/         devicesSlice + useDeviceRuntime (pemilik adapter)
-│     ├─ domain/        model perangkat, command, AppError, registry, repository
+│     ├─ domain/        model/ · rules/ · connection/ — lihat bawah
 │     ├─ adapters/      satu-satunya kode yang tahu topik, JSON, fetch, mqtt.js
 │     └─ storage/       transform redux-persist (hanya konfigurasi)
 ├─ simulator/           Mosquitto + mock HTTP + publisher MQTT + CLI
-└─ docs/                slide arsitektur, message contract, design system
+└─ docs/                slide arsitektur, message contract, design system, rencana milestone
 ```
 
 **UI** mengikuti [docs/relay_os_design_system.md](docs/relay_os_design_system.md): token warna semantik, readout telemetri monospace, kontrol fisik (rocker I/O, rail dimmer). Tidak ada layar atau komponen yang meng-import `mqtt` atau memanggil `fetch`.
 
 **State** adalah satu `devicesSlice` dengan reducer biasa: `deviceAdded`, `deviceUpdated`, `deviceRemoved`, `stateReceived`, `statusReceived`, `errorReceived`. `useDeviceRuntime` memegang satu `DeviceRepository` dan menyambungkan event adapter ke action tersebut.
 
-**Domain** berisi model perangkat bersama, `checkCommand`, `AppError` bertipe, interface `DeviceAdapter`, `DeviceRepository`, dan `AdapterRegistry`. Tidak ada library protokol di layer ini.
+**Domain** dipecah tiga menurut perannya: `domain/model/` berisi tipe perangkat, state awal, pembuat device, dan `AppError`; `domain/rules/` berisi `command`, `validate` (`checkCommand`), dan `parse`; `domain/connection/` berisi interface `DeviceAdapter`, `AdapterRegistry`, dan `DeviceRepository`. Tidak ada library protokol di layer ini.
 
 **Adapters** adalah satu-satunya layer yang tahu soal topik, bentuk JSON, `fetch`, atau `mqtt.js`.
 
@@ -47,9 +47,10 @@ Menambah protokol ketiga = satu class adapter + satu baris `registry.register()`
 ## Fitur
 
 - **Daftar perangkat** — nama, tipe, status online/offline, dan state saat ini (`On, 70%`, `Off`, `26.5°C · 61% RH`), plus badge protokol (`MQTT • SUB` / `HTTP • POLL 3s`).
-- **Tambah, edit, hapus** — form menyesuaikan diri dengan protokol yang dipilih; field koneksi yang muncul hanya yang dibutuhkan protokol itu. Hapus butuh dua ketukan.
+- **Tambah, edit, hapus** — form menyesuaikan diri dengan protokol yang dipilih; field koneksi yang muncul hanya yang dibutuhkan protokol itu.
 - **Tiga tipe perangkat** — light (on/off + brightness 0–100 lewat rail yang di-drag), plug (rocker I/O mekanis), sensor (suhu + kelembapan, read-only).
 - **Live state** — MQTT lewat subscription, HTTP lewat polling 3 detik. Tanpa tombol refresh.
+- **Filter ruangan** — chip `ALL` dan lima ruangan dengan jumlah perangkat masing-masing; perangkat tanpa ruangan hanya muncul di `ALL`. Pilihan filter tidak disimpan, jadi app selalu mulai dari `ALL`.
 - **Persistence** — konfigurasi perangkat bertahan setelah app ditutup.
 - **Error state bertipe** — `broker_unreachable`, `wrong_url`, `device_offline`, `request_timeout`, masing-masing dengan banner yang menyebut endpoint yang gagal.
 
@@ -86,7 +87,7 @@ npm start                     # Express mock di :3000 + publisher MQTT
 | `plug-1`   | plug   | Living Room Plug | `{on: true}`                        |
 | `sensor-1` | sensor | Kitchen Sensor   | `{temperature: 26.5, humidity: 61}` |
 
-`sensor-1` diperbarui tiap 5 detik.
+`sensor-1` diperbarui tiap 3 detik.
 
 Ubah state perangkat dari luar app untuk melihat pembaruan live:
 
@@ -107,7 +108,7 @@ Endpoint yang sama juga ada di koleksi Bruno pada `simulator/bruno/` kalau lebih
 
 cd app
 npm ci
-npm start                     # Metro, biarkan terminal ini terbuka
+npm start                     # Metro, biarkan terminal ini terbuka -> jalankan jika memang metro secara otomatis ga terbuka pas jalanin npm run android
 npm run android               # terminal terpisah
 ```
 
@@ -127,7 +128,7 @@ Id perangkat diturunkan dari nama perangkat (`Living Room Plug` → `living-room
 
 ```bash
 cd app
-npm test                      # 47 tes di 11 suite, ~0,3 detik
+npm test                      # 52 tes di 12 suite, ~0,3 detik
 npm run typecheck             # tsc --noEmit
 npm run lint                  # 0 error, 8 warning
 ```
@@ -190,7 +191,7 @@ Satu kegagalan polling cukup untuk menandai perangkat offline: perangkat smart h
 
 ## Trade-off dan asumsi
 
-- **Hanya konfigurasi yang di-persist, state live tidak pernah.** `status`, `errorType`, `errorMessage`, dan `state` dibuang saat menyimpan dan dibangun ulang saat memuat, jadi setiap kartu mulai dari `offline` sampai adapter-nya melapor. Menampilkan `ONLINE` basi sebelum ada percobaan koneksi berarti berbohong.
+- **Hanya konfigurasi yang di-persist, state live tidak pernah.** `status`, `errorType`, `errorMessage`, dan `state` dibuang saat menyimpan dan dibangun ulang saat memuat, jadi setiap kartu mulai dari `offline` sampai adapter-nya melapor. Menampilkan `ONLINE` lama sebelum ada percobaan koneksi jatuhnya nanti jadi kebohongan jadi ga diterpin.
 - **Tidak ada optimistic update.** Perintah dikonfirmasi oleh pesan state berikutnya dari perangkat itu sendiri. Menekan plug saat broker mati membiarkan kartu apa adanya dan menampilkan banner — lebih lambat, tapi UI tidak pernah menampilkan state yang tidak dilaporkan perangkat.
 - **Polling untuk HTTP, 3 detik.** REST tidak bisa push. 3 detik adalah kompromi antara kesegaran data dan beban server; di deployment sungguhan saya akan memakai SSE atau WebSocket dan menyimpan polling sebagai cadangan.
 - **Id perangkat diturunkan dari nama dan tidak bisa diubah.** Mengganti nama akan diam-diam mengarahkan perangkat ke topik MQTT lain. Karena itu sheet edit tidak bisa mengganti id, dan reducer mengabaikan `id` di dalam patch.
@@ -200,7 +201,7 @@ Satu kegagalan polling cukup untuk menandai perangkat offline: perangkat smart h
 ## Keterbatasan
 
 - **Android emulator saja.** Tidak ada perangkat fisik, tidak ada iOS. Kodenya netral platform dan tidak punya cabang khusus platform, tapi belum pernah di-build untuk iOS.
-- **`checkCommand` punya unit test tapi tidak ada di jalur perintah.** `app/src/domain/validate.ts` punya validator lengkap (menolak sensor, menolak brightness di luar 0–100) beserta tesnya, tetapi `DeviceCard` dan `DeviceRepository` tidak memanggilnya — UI mencegah perintah ke sensor dengan tidak me-render kontrolnya, dan dimmer membatasi brightness sendiri. Repository seharusnya memanggilnya sebelum `adapter.send()`; sekarang ini penjaga yang ada tapi tidak menjaga.
+- **`checkCommand` punya unit test tapi tidak ada di jalur perintah.** `app/src/domain/rules/validate.ts` punya validator lengkap (menolak sensor, menolak brightness di luar 0–100) beserta tesnya, tetapi `DeviceCard` dan `DeviceRepository` tidak memanggilnya — UI mencegah perintah ke sensor dengan tidak me-render kontrolnya, dan dimmer membatasi brightness sendiri. Repository seharusnya memanggilnya sebelum `adapter.send()`; sekarang ini penjaga yang ada tapi tidak menjaga.
 - **`request_timeout` belum pernah terpicu di perangkat.** Alarmnya ada dan teruji, tapi mock Express selalu menjawab cepat. Cara memicunya:
 
   ```bash
@@ -208,36 +209,34 @@ Satu kegagalan polling cukup untuk menandai perangkat offline: perangkat smart h
   # lalu tambahkan perangkat HTTP dengan base URL http://10.0.2.2:3999
   ```
 
-- **Delapan warning lint, nol error.** Tujuh `no-void` dari pemanggilan `void promise` yang sengaja menandai fire-and-forget, satu inline `{ color: '#FFFFFF' }`.
-
 ### Belum dikerjakan (nice-to-have dari brief)
 
-- **Room filter bar** — `room` sudah ada di model dan pemilih chip ada di sheet, tapi filter belum ada.
-- **`ALL OFF`** — sudah dirancang di design system (§6.1), belum diimplementasikan.
-- **Tema Night-Shift** — palet lengkap ada di `app/src/ui/theme/tokens.ts`, tapi belum ada toggle. Mengganti tema saat runtime berarti setiap `StyleSheet.create` harus jadi fungsi dari palet, dan risiko regresinya tidak sepadan untuk submission ini.
-- **Sparkline sensor** dan **`SCAN QR`** — belum; QR butuh modul kamera native dan rebuild.
-- **Hazard stripe pada banner error** masih strip datar, bukan pola garis 45° dari §6.5. Warna, judul, pesan, dan kedua tombolnya sudah sesuai.
+- [ ] **`ALL OFF`** — sudah dirancang di design system (§6.1), belum diimplementasikan.
+- [ ] **Tema Night-Shift** — palet lengkap ada di `app/src/ui/theme/tokens.ts`, tapi belum ada toggle. Mengganti tema saat runtime berarti setiap `StyleSheet.create` harus jadi fungsi dari palet, dan risiko regresinya tidak sepadan untuk submission ini.
+- [ ] **Sparkline sensor** dan **`SCAN QR`** — belum; QR butuh modul kamera native dan rebuild.
+- [ ] **Hazard stripe pada banner error** masih strip datar, bukan pola garis 45° dari §6.5. Warna, judul, pesan, dan kedua tombolnya sudah sesuai.
 
 ## Status
 
-- [x] Model perangkat, command, error bertipe, dan validasi domain
-- [x] Simulator: Mosquitto, mock HTTP, publisher MQTT, CLI, koleksi Bruno
-- [x] `HttpAdapter` dengan polling, timeout, dan pembersihan timer
-- [x] `MqttAdapter` dengan subscription, reconnect backoff, dan status timeout
-- [x] Form tambah/edit/hapus perangkat per protokol
-- [x] Persistence konfigurasi perangkat
-- [x] Empat jenis error state dengan banner yang menyebut endpoint
-- [x] 47 tes di 11 suite; typecheck bersih; lint nol error
-- [x] Slide arsitektur (PDF/PNG/draw.io) di `docs/`
-- [ ] Video demo
-- [ ] Screenshot
+- [v] Model perangkat, command, error bertipe, dan validasi domain
+- [v] Simulator: Mosquitto, mock HTTP, publisher MQTT, CLI, koleksi Bruno
+- [v] `HttpAdapter` dengan polling, timeout, dan pembersihan timer
+- [v] `MqttAdapter` dengan subscription, reconnect backoff, dan status timeout
+- [v] Form tambah/edit/hapus perangkat per protokol
+- [v] Persistence konfigurasi perangkat
+- [v] Empat jenis error state dengan banner yang menyebut endpoint
+- [v] Filter ruangan di daftar perangkat
+- [v] 52 tes di 12 suite; typecheck bersih; lint nol error
+- [v] Slide arsitektur (PDF/PNG) di `docs/`
+- [v] Video demo
 
 ## Cara saya memakai alat AI
 
-Brief mengizinkan AI coding assistant selama dijelaskan di sini. Ini yang sebenarnya terjadi:
+Brief mengizinkan AI coding assistant selama dijelaskan di sini. Ini yang saya terapkan:
 
 - **Desain dulu, kode kemudian.** Pembagian layer (UI → State → Domain → Adapters), interface `DeviceAdapter`, dan kosakata empat error dirancang sebelum ada file apa pun, lalu ditulis ke `docs/relay_os_design_system.md` dan `docs/message-contract.md` sebagai sumber kebenaran untuk memeriksa kode maupun README ini.
 - **Seluruh kode UI ditulis sendiri** — token tema, kartu perangkat, rocker plug, rail dimmer, banner error, dan sheet add/edit.
+- **Dokumentasi dikerjakan dengan bantuan AI.** `docs/MILESTONES.md` (rencana per milestone dan alokasi jam), perapian README (urutan bagian, pohon folder, penyelarasan istilah dengan kode), dan slide arsitektur ( diekspor ke `docs/architecture.pdf` dan `docs/architecture.png``docs/relay_os_design_system.md` dan `docs/message-contract.md` ) disusun bersama AI. Keputusan isinya tetap milik saya: apa yang dipotong, trade-off yang diakui, dan setiap klaim status — semuanya saya cocokkan dengan kode dan hasil `npm test` sebelum diterima.
 - **AI dipakai untuk perbaikan bug dan penyesuaian styling di kontrol brightness**, serta menyusun simulator dan sebagian berkas tes. Hasilnya saya tinjau dan jalankan sendiri sebelum diterima.
 - **Tes diperiksa terhadap perilaku sungguhan.** Tes reducer "perubahan tipe mereset bentuk state" ada karena bug itu benar-benar membuat app crash, bukan karena template tes memintanya.
 - **Debugging dikerjakan dengan menjalankan app-nya.** Beberapa dugaan awal salah dan hanya ketahuan setelah app dijalankan: kartu perangkat yang dikira gagal tersimpan ternyata hanya berada di luar layar dan perlu di-scroll, dan nama perangkat yang tidak terisi membuat penyimpanan ditolak validasi tanpa pesan yang jelas.
